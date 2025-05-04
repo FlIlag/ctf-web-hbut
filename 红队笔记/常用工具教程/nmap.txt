@@ -4,8 +4,8 @@ Nmap的常用命令及详细解释，涵盖基础扫描、端口指定、服务/
 nmap -sn 10.10.10.0/24
 nmap -sT --min-rate 10000 -p-  -oA nmapscan/ports
 nmap -sT -sV -sC -O -p<端口号> 10.10.10.21 -oA nmapscan/detail
-
-
+nmap -sU --top-ports 20 10.10.10.21 -oA nmapscan/udp
+nmap --script=vuln -p<端口号> 10.10.10.21 -oA nmapscan/vuln
 
 
  一、基础扫描命令

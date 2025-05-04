@@ -1,0 +1,15 @@
+一，nmap扫描
+nmap -sn 10.10.10.0/24
+nmap -sT --min-rate 10000 -p- 10.10.10.21 -oA nmapscan/ports
+nmap -sT -sV -sC -O -p<端口号> 10.10.10.21 -oA nmapscan/detail
+nmap -sU --top-ports 20 10.10.10.21 -oA nmapscan/udp
+nmap --script=vuln -p<端口号> 10.10.10.21 -oA nmapscan/vuln
+
+二，寻找攻击向量
+常见攻击向量：
+22/tcp ssh
+80/tcp http
+3306/tcp mysql
+21tcp ftp
+
+三确认攻击向量，寻找漏洞

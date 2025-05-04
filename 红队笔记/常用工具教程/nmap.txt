@@ -1,5 +1,13 @@
 Nmap的常用命令及详细解释，涵盖基础扫描、端口指定、服务/系统检测、扫描类型及结果输出等核心功能：
 
+常用：
+nmap -sn 10.10.10.0/24
+nmap -sT --min-rate 10000 -p-  -oA nmapscan/ports
+nmap -sT -sV -sC -O -p<端口号> 10.10.10.21 -oA nmapscan/detail
+
+
+
+
  一、基础扫描命令
  1. 默认扫描（SYN 半开扫描）
 

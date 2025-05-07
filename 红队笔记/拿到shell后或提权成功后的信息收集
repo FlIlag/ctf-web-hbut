@@ -1,0 +1,8 @@
+依次执行以下命令：
+whoami
+id
+uname -a
+sudo -l
+
+若sudo -l 返回的是all
+表示权限为root

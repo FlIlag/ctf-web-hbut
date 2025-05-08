@@ -1,0 +1,10 @@
+水平越权：“水平越权”（Horizontal Privilege Escalation）指的是在同一权限等级之间，攻击者或未经授权的用户通过各种手段访问、篡改或窃取与自己权限相同的其他用户数据或资源。
+eg:常见攻击场景与示例
+Web 应用：缺失或不严谨的授权校验
+GET /profile?user_id=1002 HTTP/1.1
+Host: example.com
+Cookie: session=abcdefg   # 登录的是用户 1001
+!!!!!!!!!!!!!!!!!!!!!!!!!!若后台只依赖用户提供的 user_id 直接读取数据库：!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SELECT * FROM users WHERE id = :user_id;
+攻击者只需修改 user_id 为其他人的 ID（如 1002），即可查看或修改他人信息。
+

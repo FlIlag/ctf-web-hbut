@@ -1,6 +1,6 @@
 在 BSD 系统中，/etc/doas.conf 是 doas 工具的配置文件（类似 Linux 的sudo）
 所以首先检查该文件
 cat /etc/doas.conf
-会返回类似：permit nopass user alice as root  # alice用户无需密码即可执行doas
+会返回类似：permit bob as root cmd /usr/bin/vim   # bob用户无需doas密码即可执行vim
 即告诉哪些程序是可以无需密码即可执行的，而这些程序往往就是suid。
 eg:/bin/less无需密码即可执行，其为一个日志查看程序，但是输入v 会进入vi模式，对于suid vi，直接!:命令提权

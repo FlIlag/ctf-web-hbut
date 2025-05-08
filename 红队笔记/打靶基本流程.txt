@@ -4,7 +4,7 @@ nmap -sT --min-rate 10000 -p- 10.10.10.21 -oA nmapscan/ports
 nmap -sT -sV -sC -O -p<端口号> 10.10.10.21 -oA nmapscan/detail
 nmap -sU --top-ports 20 10.10.10.21 -oA nmapscan/udp
 nmap --script=vuln -p<端口号> 10.10.10.21 -oA nmapscan/vuln
-
+如果都没有东西那就要去扫一下 IPV6 有没有东西
 二，寻找攻击向量
 常见攻击向量：
 22/tcp ssh

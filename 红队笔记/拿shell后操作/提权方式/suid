@@ -1,0 +1,20 @@
+suid提权，即利用拥有root命令的二进制文件进行提权：
+一：root权限编辑器
+  一个拥有root权限的编辑器是非常可怕的，直接查看shadow文件爆破密码
+  或者直接更改/etc/sudoers文件使得普通用户拥有root权限：
+  '''
+  添加授权规则
+  添加一条规则来允许特定的普通用户以 root 身份执行所有命令。例如，如果你要让名为 your_username 的普通用户拥有 root 权限，可以添加如下规则：
+  
+  your_username ALL=(ALL:ALL) ALL
+  
+  这里规则的各个部分含义如下：
+  your_username：表示要赋予权限的普通用户的用户名。
+  ALL：表示该用户可以从任何主机登录并执行 sudo 命令。
+  (ALL:ALL)：表示该用户可以以任何用户（冒号前部分）和任何用户组（冒号后部分）的身份执行命令，通常情况下默认就是以 root 用户身份执行。
+  ALL：表示该用户可以执行任何命令。
+  
+  如果你希望该用户在执行 sudo 命令时无需输入密码，可以添加 NOPASSWD 选项，规则如下：
+  
+  your_username ALL=(ALL:ALL) NOPASSWD: ALL
+  '''

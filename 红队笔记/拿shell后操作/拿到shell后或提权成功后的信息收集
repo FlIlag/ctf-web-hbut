@@ -7,6 +7,7 @@ sudo -l
 若sudo -l 返回的是all
 表示sudo权限为root,可以直接sudo提权：sudo /bin/bash   以sudo拥有的权限打开一个新终端
 不是all的话看看是否输出其他可以以root权限运行的程序：eg：/bin/vim
+再或者该用户可以无密码登录其他用户， 命令为 sudo -u 用户名   /bin/bash
 
 在拿到shell后，先尝试是否可以访问/etc/shadow，可以直接明文root提权
 

@@ -42,4 +42,8 @@ find . -exec /bin/sh -p \; -quit
 bash -p
 
 五：其他可执行文件的一般suid二进制文件
+
+若 SUID 程序能写入 /etc/cron.d/、/etc/profile.d/、~/.bashrc 等文件，就可插入反弹 shell 或定时任务
+
+
 由于利用方式比较特殊，所以放在了该目录下的‘一般类suid文件利用方式’这个文件夹中

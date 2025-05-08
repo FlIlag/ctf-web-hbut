@@ -1,0 +1,24 @@
+一，nmap扫描
+nmap -sn 10.10.10.0/24
+nmap -sT --min-rate 10000 -p- 10.10.10.21 -oA nmapscan/ports
+nmap -sT -sV -sC -O -p<端口号> 10.10.10.21 -oA nmapscan/detail
+nmap -sU --top-ports 20 10.10.10.21 -oA nmapscan/udp
+nmap --script=vuln -p<端口号> 10.10.10.21 -oA nmapscan/vuln
+
+二，寻找攻击向量
+常见攻击向量：
+22/tcp ssh
+80/tcp http
+3306/tcp mysql
+21tcp ftp
+
+三确认攻击向量，寻找漏洞
+在进行漏洞寻找中也是一个信息收集的过程
+对于信息收集，要对用户名，邮箱，密码，网站使用的框架，第三方管理系统等敏感
+用户名，邮箱，密码很可能会是主机用户名和密码
+而第三方框架很有可能有漏洞，或者没有及时打上安全补丁
+要多使用google浏览器，搜索：网站系统默认密码，系统管理员登录路径，漏洞等
+可以使用searchsploit寻找相关的漏洞
+
+拿到shell后：
+对于提权，第一步就是确认一共有多少用户，所以访问/etc/passwd，确认哪些用户拥有bash权限

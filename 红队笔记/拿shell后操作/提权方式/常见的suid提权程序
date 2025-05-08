@@ -4,6 +4,26 @@ find / -user root -perm -4000 -print 2>/dev/null    查找 root 用户拥有的 
 find / -perm -u=s -type f 2>/dev/null    查找所有具备 SUID 权限的普通文件
 find / -user root -perm -4000 -exec ls {} \; 2>/dev/null    查找 root 用户拥有的 SUID 文件并显示详细信息
 以上三条命令用于寻找拥有suid权限的文件
+常见可利用的suid提权：
+/usr/bin/passwd
+/usr/bin/sudo
+/usr/bin/chfn
+/usr/bin/chsh
+/usr/bin/gpasswd
+/usr/bin/newgrp
+/usr/bin/mount
+/usr/bin/umount
+/usr/bin/pkexec
+/usr/bin/crontab
+/usr/bin/at
+/bin/ping
+/usr/bin/find
+/usr/bin/vim
+/usr/bin/nano
+/usr/bin/less
+/usr/bin/more
+/usr/bin/rsync
+/usr/bin/screen
 
 一：root权限编辑器
   一个拥有root权限的编辑器是非常可怕的，直接查看shadow文件爆破密码，添加新的用户， 

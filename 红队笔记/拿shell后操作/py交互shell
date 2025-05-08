@@ -1,0 +1,3 @@
+python -c "import pty;pty.spawn('/bin/bash')"
+
+用于在拿到shell后，由于shell交互性太差，使用python创建一个交互性更好的shell

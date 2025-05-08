@@ -1,6 +1,5 @@
 若 SUID 程序能写入 /etc/cron.d/、/etc/profile.d/、~/.bashrc 等文件，就可插入反弹 shell 或定时任务
-
-已思考 9 秒
+其实利用方式和root权限编辑器差不多
 
 
 下面假设系统中存在一个功能简单的 SUID 程序 `suid_writer`，它能以 root 身份往任意路径“追加”一行文本：

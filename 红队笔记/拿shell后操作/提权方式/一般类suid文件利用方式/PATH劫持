@@ -64,6 +64,18 @@ uid=0(root) gid=0(root) groups=0(root)
 由于 system("ps aux") 会调用 execvp("ps", ...)，而你的 PATH 让它先找到当前目录下的 ps（其实是 /bin/sh），就直接以 root 权限给你打开了一个 shell。
 
 
+防御思路：
+
+    强制使用绝对路径：在所有 system()/exec*() 调用中写明全路径，如 /bin/ps。
+
+    审计 SUID 程序：查找所有带 SUID 的二进制，确认内部是否有不安全的命令调用。
+
+    最小化 SUID：只保留必要的 SUID 程序，其它改用 sudo 或者能力控制（capabilities）。
+
+    环境隔离：对关键程序清空或重置环境变量，如 PATH、LD_* 等；运行时仅加载可信目录。
+
+    使用安全框架：借助 AppArmor、SELinux 给 SUID 程序加额外限制，防止任意执行。
+
 
 
 

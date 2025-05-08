@@ -1,0 +1,11 @@
+Samba 是一款实现 Linux/Unix 系统与 Windows 系统间文件及打印机共享的开源软件，基于 SMB（Server Message Block）/CIFS（Common Internet File System）协议，支持跨平台资源互访。以下是关于 Samba 服务的详细说明：
+一、核心功能
+文件共享
+在 Linux 与 Windows 之间共享目录，支持权限控制（如只读 / 读写、用户 / 组访问限制）。
+支持 Windows 网络邻居（NetBIOS）发现，可通过 UNC 路径（如 \\Samba服务器IP\共享名）访问。
+打印机共享
+允许 Windows 客户端通过 Samba 访问 Linux 系统连接的打印机。
+域集成
+支持加入 Windows 域（Domain Member）或作为独立服务器（Standalone Server），甚至可配置为 Active Directory 域控制器（Samba AD DC）。
+跨平台认证
+支持使用本地用户、LDAP 或域账户进行身份验证，兼容 NTLM、NTLMv2 及 Kerberos 协议。

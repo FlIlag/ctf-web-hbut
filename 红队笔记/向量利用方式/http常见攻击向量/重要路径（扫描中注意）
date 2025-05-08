@@ -1,3 +1,5 @@
 /backup
 
 /debug    一般其中有调试终端，运气好会直接找到一个前端shell
+
+/robots.txt   一般有隐藏路径

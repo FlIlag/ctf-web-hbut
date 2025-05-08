@@ -1,0 +1,206 @@
+
+
+## 一、密钥与证书生成
+
+### 1. 生成 RSA 私钥
+
+```bash
+openssl genpkey -algorithm RSA -out private.key -pkeyopt rsa_keygen_bits:2048
+```
+
+* **genpkey**：通用密钥生成接口，推荐代替旧的 `genrsa`。
+* **-algorithm RSA**：指定算法为 RSA。
+* **-pkeyopt rsa\_keygen\_bits:2048**：指定密钥长度为 2048 位。
+* **private.key**：输出的私钥文件（PEM 格式）。
+
+### 2. 从私钥导出公钥
+
+```bash
+openssl rsa -in private.key -pubout -out public.key
+```
+
+* **rsa**：处理 RSA 密钥的工具。
+* **-in private.key**：输入私钥。
+* **-pubout**：输出公钥。
+* **-out public.key**：保存到文件。
+
+### 3. 生成证书签名请求（CSR）
+
+```bash
+openssl req -new -key private.key -out request.csr \
+  -subj "/C=CN/ST=Beijing/L=Beijing/O=Example/OU=IT/CN=example.com"
+```
+
+* **req -new**：生成新的证书请求。
+* **-key private.key**：使用当前私钥。
+* **-out request.csr**：输出 CSR 文件。
+* **-subj "…"**：直接在命令行指定主题（省去交互式输入）。
+
+### 4. 自签名证书（供测试）
+
+```bash
+openssl req -x509 -days 365 -key private.key -in request.csr -out cert.pem
+```
+
+* **-x509**：直接输出自签名证书，而非 CSR。
+* **-days 365**：证书有效期 365 天。
+* **-in request.csr**：输入 CSR，也可省略改为交互式填 Subject。
+
+---
+
+## 二、格式转换
+
+### 1. PEM ↔ DER
+
+* **PEM 转 DER（二进制）**
+
+  ```bash
+  openssl x509 -in cert.pem -outform DER -out cert.der
+  ```
+* **DER 转 PEM（可读 Base64）**
+
+  ```bash
+  openssl x509 -in cert.der -inform DER -out cert.pem -outform PEM
+  ```
+
+### 2. PKCS#8 私钥（无/有密码）
+
+* **转换为无密码 PKCS#8**
+
+  ```bash
+  openssl pkcs8 -topk8 -inform PEM -in private.key -out pk8.key -nocrypt
+  ```
+* **转换为带密码 PKCS#8**
+
+  ```bash
+  openssl pkcs8 -topk8 -inform PEM -in private.key -out pk8_enc.key -v2 aes-256-cbc
+  ```
+
+  * **-v2 aes-256-cbc**：使用 AES-256-CBC 加密私钥。
+
+### 3. PKCS#12（.p12/.pfx）与 PEM
+
+* **PEM → PFX**
+
+  ```bash
+  openssl pkcs12 -export -in cert.pem -inkey private.key -out bundle.pfx -name "mycert"
+  ```
+* **PFX → PEM（证书与私钥）**
+
+  ```bash
+  openssl pkcs12 -in bundle.pfx -nodes -out all.pem
+  ```
+
+---
+
+## 三、文件加密与解密
+
+### 1. 对称加密（AES-256-CBC）
+
+```bash
+openssl enc -aes-256-cbc -salt -in secret.txt -out secret.enc
+```
+
+* **enc**：对称加解密。
+* **-aes-256-cbc**：算法与模式。
+* **-salt**：在开头插入盐值，增强安全性。
+* **-in/-out**：输入输出。
+
+### 2. 解密
+
+```bash
+openssl enc -aes-256-cbc -d -in secret.enc -out secret.dec.txt
+```
+
+* **-d**：解密模式。
+
+---
+
+## 四、摘要与哈希
+
+### 1. 计算 MD5、SHA256
+
+```bash
+openssl dgst -md5 file.txt
+openssl dgst -sha256 file.txt
+```
+
+* **dgst**：通用摘要命令。
+* **-md5、-sha256**：选择摘要算法。
+
+### 2. HMAC
+
+```bash
+openssl dgst -sha256 -hmac "password" file.txt
+```
+
+* **-hmac**：基于密钥的 HMAC 计算。
+
+---
+
+## 五、签名与验证
+
+### 1. 使用私钥签名
+
+```bash
+openssl dgst -sha256 -sign private.key -out file.sig file.txt
+```
+
+* 输出二进制签名 `file.sig`。
+
+### 2. 使用公钥验证
+
+```bash
+openssl dgst -sha256 -verify public.key -signature file.sig file.txt
+```
+
+* 若验证通过，打印 `Verified OK`。
+
+---
+
+## 六、SSL/TLS 测试
+
+### 1. 测试与服务器的 TLS 连接
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com
+```
+
+* **s\_client**：SSL/TLS 客户端测试工具。
+* **-servername**：用于 SNI（Server Name Indication）。
+
+### 2. 本地快速建立 TLS 服务
+
+```bash
+openssl s_server -cert cert.pem -key private.key -accept 8443
+```
+
+* **s\_server**：快速搭建调试用 SSL/TLS 服务。
+
+---
+
+## 七、其他实用命令
+
+### 1. 查看证书内容（PEM/DER）
+
+```bash
+openssl x509 -in cert.pem -noout -text
+openssl x509 -in cert.der -inform DER -noout -text
+```
+
+### 2. 查看 CSR 内容
+
+```bash
+openssl req -in request.csr -noout -text
+```
+
+### 3. 生成随机字符串
+
+```bash
+openssl rand -hex 16   # 输出 16 字节的十六进制随机数
+openssl rand -base64 12
+```
+
+---
+
+以上覆盖了大部分日常使用场景，可根据具体需求组合或加上其他参数（如 `-passin/-passout`、`-days`、`-CA`、`-extensions` 等）。常见帮助可通过 `openssl <command> -help` 查看某条命令的所有选项。祝使用顺利！

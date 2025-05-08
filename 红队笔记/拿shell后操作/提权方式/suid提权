@@ -7,7 +7,9 @@ find / -user root -perm -4000 -exec ls {} \; 2>/dev/null    查找 root 用户�
 
 一：root权限编辑器
   一个拥有root权限的编辑器是非常可怕的，直接查看shadow文件爆破密码，添加新的用户， 
-  或者直接更改/etc/sudoers文件使得普通用户拥有root权限：
+  或者直接更改/etc/sudoers文件使得普通用户拥有root权限，
+  再或者，对于vi和vim，可以直接:!加任意命令   ‘:! <系统命令>’
+
   '''
   添加授权规则
   添加一条规则来允许特定的普通用户以 root 身份执行所有命令。例如，如果你要让名为 your_username 的普通用户拥有 root 权限，可以添加如下规则：

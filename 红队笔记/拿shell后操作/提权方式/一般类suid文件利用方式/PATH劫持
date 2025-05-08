@@ -45,6 +45,14 @@ lrwxrwxrwx 1 user user 7 May  8 15:30 ps -> /bin/sh
 将当前目录放到 PATH 最前面(让我们刚刚伪造的ps（实际上指向/bin/sh创建一个终端），从而替代掉之前的ps：
 
 export PATH=$PWD:$PATH
+运行时先去$PWD目录寻找是否有相同名称的文件和脚本而不去/bin,$PWD为你运行export PATH=$PWD:$PATH时的路径
+用 PATH=$PWD:$PATH，你把那个目录固定地放在最前面——即使之后 cd 到别的地方，前面这一项仍然是最开始的目录。
+或者：
+export PATH=.:$PATH
+
+    效果：当你运行一个不带绝对路径的命令（如 ps、ls、tar 等）时，Shell 会先在当前目录查找有没有同名可执行文件或脚本，如果找到就直接运行它，而不会去 /bin、usr/bin 等系统目录。
+
+    在 SUID 利用中的意义：正是利用了这一点，你可以在当前目录放一个名为 ps（或其他目标程序名字）的恶意脚本/软链接，从而让具有 SUID 的程序误执行你放在 . 里的版本，以提权。
 
 执行 SUID 程序：
 

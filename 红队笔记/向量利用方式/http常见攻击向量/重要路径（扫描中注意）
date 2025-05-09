@@ -1,4 +1,4 @@
-/backup
+/backup  , .bak,.jsp.bak,.sql,.txt    备份文件
 
 /debug    一般其中有调试终端，运气好会直接找到一个前端shell
 

@@ -1,0 +1,35 @@
+下面按语言和应用场景，列出一些市面上常见且流行的 CMS（内容管理系统）框架，供你选型参考：
+一、PHP 系 CMS
+框架	典型版本／发行	主要特点	适用场景
+WordPress	5.x	插件生态极其丰富，上手简单；大量主题与第三方服务支持；社区活跃	博客、企业官网、小型电商
+Drupal	9.x/10.x	高度可扩展，权限及内容模型灵活；内置多语言、强大的内容结构	中大型企业站、政府/教育行业
+Joomla	4.x	权限管理和多站点支持较好；模板和扩展丰富	中小型门户、社群网站
+Magento (Adobe Commerce)	2.x	专业电商解决方案；多店铺、多币种、B2B 特性齐全	专业级中大型电商
+
+二、Node.js／JavaScript 系 CMS
+框架	发行状态	主要特点	适用场景
+Ghost	5.x	轻量、主打博客；Markdown 编辑，Server‑less 部署支持	个人/团队博客、内容创作平台
+Strapi	4.x	Headless CMS，基于 REST/GraphQL；可视化内容模型编辑	多端内容分发（Web、App、IoT）
+KeystoneJS	6.x	Headless/传统模式可选；强大的数据模型和 Admin UI	定制化后台系统、Headless 应用
+
+三、Python系 CMS
+框架	发行状态	主要特点	适用场景
+Django CMS	4.x	依托 Django 生态；插件化、模板化灵活；多语言支持	企业官网、内容门户
+Wagtail	3.x	编辑体验好，StreamField 灵活；对开发者友好	教育机构、新闻媒体、大型网站
+Mezzanine	5.x	类似 WordPress 功能；支持博客、电商和项目展示	中小型企业网站、博客
+
+四、Java／JVM 系 CMS
+框架	发行状态	主要特点	适用场景
+Alfresco	社区版/企业版	ECM（企业内容管理）平台；文档管理、工作流、权限细粒度	大型企业文档管理、协同办公
+Liferay DXP	商业授权	门户平台＋CMS；权限、工作流和多站点能力强	企业门户、内网/外网混合部署
+
+五、.NET 系 CMS
+框架	发行状态	主要特点	适用场景
+Umbraco	9.x	开源、基于 ASP.NET Core；编辑体验佳、社区扩展丰富	企业官网、营销型网站
+Orchard Core	1.x	模块化设计、高度可定制；支持多租户	定制化后台系统、SaaS 平台
+
+六、静态站点生成器（SSG）
+工具	语言／平台	主要特点	适用场景
+Jekyll	Ruby	GitHub Pages 原生支持；Markdown 写作	个人/团队博客、技术文档
+Hugo	Go	构建速度极快；丰富主题生态	博客、文档站、项目官网
+Hexo	Node.js	配置简单、插件多；Markdown 写作	博客、Portfolio 网站

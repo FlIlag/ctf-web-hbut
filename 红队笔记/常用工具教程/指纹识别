@@ -1,0 +1,9 @@
+Web 容器／CMS 指纹
+工具	作用	用法示例
+WhatWeb	Web 应用指纹＋插件探测	whatweb -a 3 http://target.com/
+Wappalyzer	前端／后端技术栈识别（浏览器插件／CLI）	wappalyzer http://target.com/
+Webanalyze	并发多线程 HTTP 指纹	webanalyze -host target.com
+Nikto	Web 漏洞扫描＋部分指纹	nikto -h http://target.com
+Wafw00f	WAF / Web 防护墙探测	wafw00f http://target.com
+CMSmap	专门针对常见 CMS（WordPress/Drupal…）的指纹与漏洞	cmsmap http://target.com/
+BlindElephant	静态文件哈希对比，更精细化版本识别	blindelephant.py -d target.com -u /path/to/wordlist

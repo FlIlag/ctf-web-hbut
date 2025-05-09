@@ -1,0 +1,99 @@
+*存在可访问的管理控制台入口
+**漏洞描述**：Web控制台是一种基于Web的用户界面，其常常被用于网站后台或者web容器控制台中，其不仅局限于容器或者网站管理后台，还包括一些数据库默认后台等。在安全中，网站系统在泄漏其web容器（中间件）或者数据库的控制台后，存在增加被入侵的风险。常见的web控制台包括以下容器：tomcat、arias、weblogic、websphere、oracle、jboss等。这些web的容器控制台常见访问形式：http://hostname:port/load/，例如：http://x.x.x.x:8080/manage/。
+**测试工具**：dirsearch
+**测试方法**：常见web控制台检测方法：整体思路为首先扫描其开放的端口，筛选出web服务对应端口，然后识别web容器的指纹，判断其所采用的中间件，根据端口信息和常见固定的路径，去判断其控制台地址。以下列举常见控制台的检测方法：
+1. **Apache+tomcat**：tomcat常见的web控制台地址为：http://x.x.x.x:[tomcat端口]/manager/html（tomcat默认端口为8080 ），如果是tomcat5之前的版本则控制台为/admin。tomcat控制台默认帐号为admin，密码为admin或空。
+2. **Weblogic控制台**：http://x.x.x.x:[weblogic端口]/console（weblogic默认端口为7001）。Weblogic控制台默认帐号为weblogic，密码为weblogic。
+3. **WebSphere控制台**：Websphere的控制台常见有两种，一种是基于http，另一种是基于https，分别如下：http://x.x.x.x:[管理控制台端口]/ibm/console（WebSphere管理控制台端口默认为9060）和https://x.x.x.x:localhost:[管理控制台安全端口]/ibm/console/logon.jsp（WebSphere管理控制台安全端口默认为9043）。WebSphere控制台默认帐号为admin，密码为admin。
+4. **JBoss控制台**：http://x.x.x.x:[jboss端口]/jmx-console（jboss默认端口为8080）。JBoss控制台无需登录，或者帐号密码均为admin。
+5. **Axis2控制台**：http://x.x.x.x:axis2/axis2/axis2-admin/（axis2默认端口为8080 ）。Axis2控制台默认帐号为admin，密码为axis2。
+6. **Oracleweb控制台**：一般默认的是http://x.x.x.x:localhost:5500/em。
+7. **Mongodweb控制台**：自带了Web控制台，默认端口和数据库服务一同开启。他的端口在Mongodb数据库服务器端口的基础上加1000，如果是默认的Mongodb数据服务端口(默认为27017)，则相应的Web端口为28017，这个页面可以看到当前Mongodb的所有连接、各个数据库和Collection的访问统计，包括：Reads、Writes、Queries、GetMores、Inserts、Updates、Removes、写锁的状态、以及日志文件的最后几百行（CentOS+10genyum安装的mongodb默认的日志文件位于/var/log/mongo/mongod.log）。
+8. **HPsystemmanager控制台**：该控制台一般默认的端口为2381，可在其后添加路径/cpqlogin.php?errno=100&severity=4，即可访问如https://x.x.x.x:2381/cpqlogin.php?errno=100&severity=4
+9. **ServiceRegistry3控制台**：在Web浏览器中键入以下URL：http://x.x.x.x:port/soar/。如果系统中安装了ServiceRegistry，则hostname为localhost。如果系统中尚未安装ServiceRegistry，请使用安装了Registry的系统的名称。port的值通常为6060，除非发生端口冲突。
+10. **iSAP控制台URL**：http://x.x.x.x/admin/login.jsp。iSAP控制台默认的帐号和密码：admin/admin。
+11. **“普元”管理控制台URL**：http://x.x.x.x.com/eosmgr/。“普元”管理控制台默认的帐号和密码：sysadmin/000000。 
+
+**风险分析**：攻击者使用弱口令扫描工具或者直接使用常见的弱口令去尝试登录Web中间件的管理控制台，然后通过部署war包上传webshell，进而控制整个系统。
+**风险等级**：
+- 【高危】：可访问默认中间件控制台，成功登录。能够对应用进行管理，或成功获取shell。
+- 【中危】：可访问默认中间件控制台，并成功登录。能够进行敏感操作但无法获取shell。 
+- 【低危】：可访问默认中间件控制台，但无法登录，不能执行危险操作。
+
+**修复方案**：默认的web容器控制台泄漏于网络中，常常可被利用，进行对web系统的攻击，一旦进入这些控制台后，可对网站进行任意的部署，中断服务等危险行为，建议从以下几点出发，修复有关控制台地址泄漏的问题：
+1. **对于必须暴露于公网或者其他网络中的控制台地址，则为其地址做访问白名单措施，即只允许白名单内的用户IP地址可以访问到该控制台，通过过滤器（filter）实现**：
+```java
+package com.huawei.filters;
+import java.io.IOException;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.Filter;
+import javax.servlet.ServletException;
+import javax.servlet.FilterConfig;
+
+public class ClientIpFilter implements Filter {
+    private FilterConfig filterConfig;
+    private String[] whiteIPList;
+
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+        String clientIP = req.getRemoteAddr();
+        if (isIPinWhitelist(clientIP)) {
+            //验证成功，继续处理
+            System.out.println(clientIP + "调用 WebService，IP 鉴权通过");
+            chain.doFilter(req, res);
+        } else {
+            //验证不成功，禁止用户调用该服务。
+            System.out.println(clientIP + "调用 WebService，IP 鉴权不通过");
+            //throw new ServletException(clientIP + "无权限访问 WebService！");
+        }
+    }
+
+    private boolean isIPinWhitelist(String remoteIPAddress) {
+        for (int i = 0; i < this.whiteIPList.length; i++) {
+            String strIP = this.whiteIPList[i];
+            if (strIP.equals(remoteIPAddress)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void setFilterConfig(FilterConfig filterConfig) {
+        this.filterConfig = filterConfig;
+    }
+
+    public void destroy() {
+        filterConfig = null;
+    }
+
+    public void init(FilterConfig config) throws ServletException {
+        this.filterConfig = config;
+        String IPs = config.getInitParameter("IPList");
+        this.whiteIPList = IPs.split(",");
+    }
+}
+```
+2. 在web.xml中部署过滤器ClientIpFilter
+在对应的web.xml文件的<web-app>前增加以下内容，其中IPList为需要根据实际情况配置的IP地址白名单（也就是允许访问相应Web模块的客户端IP地址列表），IP地址间通过逗号隔开，不允许有空格；其中红色部分为需要根据实际情况配置的Web目录。
+```xml
+<filter>
+    <filter-name>ClientIpFilter</filter-name>
+    <filter-class>com.huawei.filters.ClientIpFilter</filter-class>
+    <init-param>
+        <param-name>IPList</param-name>
+        <param-value>192.168.1.11,192.168.2.22,10.70.107.119</param-value>
+    </init-param>
+</filter>
+<filter-mapping>
+    <filter-name>ClientIpFilter</filter-name>
+    <url-pattern>/WebService/</url-pattern>
+</filter-mapping>
+```
+2. 修改控制台默认的用户名和密码，并为其控制台设置强壮的口令措施，防止可被恶意或简单猜解得到用户名和密码。
+3. 修改web容器控制台的默认端口，默认路径，避免可被直接利用，访问得到地址。
+例如：tomcat的修复方式：禁止别人访问tomcat主页，环境：tomcat6.0：步骤1:在server.xml中<Hostname="localhost"appBase="webapps"修改主webapps为xxxxxx（自己设置的路径）；步骤2:在tomcat-users.xml中:<username="admin"password="xxxx"roles="admin,manager">更改用户名和密码(需强壮)。
+
+**注意事项**：暂无
+**工信部远程检测**：【高危】/【中危】

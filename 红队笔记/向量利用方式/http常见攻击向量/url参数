@@ -8,6 +8,7 @@ Cookie: session=abcdefg   # 登录的是用户 1001
 SELECT * FROM users WHERE id = :user_id;
 攻击者只需修改 user_id 为其他人的 ID（如 1002），即可查看或修改他人信息。
 一般user_id = 1  很有可能时管理员，毕竟是第一个账号
+再或者role=user 改为role=admin
 
 sql注入（略）
 

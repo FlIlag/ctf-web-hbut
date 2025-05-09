@@ -1,0 +1,92 @@
+下面是 `openssl passwd` 命令的常见用法与参数说明，用于生成各种算法的 UNIX 风格密码哈希（可直接写入 `/etc/shadow` 或 `/etc/passwd`）：
+
+---
+
+## 1. 基本语法
+
+```bash
+openssl passwd [options] [password]
+```
+
+* 如果在命令行末尾直接给出 `password`，则用该明文生成哈希。
+* 如果加上 `-stdin`，则从标准输入读取明文（便于脚本中使用或避免在命令历史中留下明文）。
+
+---
+
+## 2. 常用算法选项
+
+| 选项            | 算法                   | 说明                             |
+| ------------- | -------------------- | ------------------------------ |
+| `-crypt`      | UNIX `crypt(3)`（DES） | 传统 DES 算法，只使用前 8 字节，高危不推荐      |
+| `-1` 或 `-md5` | MD5-based            | Linux 常见的 MD5 哈希（也可写作 `-apr1`） |
+| `-5`          | SHA-256              | 较强的 SHA-256 哈希                 |
+| `-6`          | SHA-512              | 更强的 SHA-512 哈希                 |
+
+> **注意**：不同系统默认算法可能不同，显式指定可确保一致性。
+
+---
+
+## 3. 盐值（salt）控制
+
+* `-salt SALT`：手动指定盐值，盐值长度不限（但通常取 8\~16 字节）。
+* 如果不指定，OpenSSL 会随机生成一个符合算法要求长度的盐值。
+
+---
+
+## 4. 示例
+
+### 4.1 生成 DES-crypt（默认）哈希
+
+```bash
+openssl passwd -crypt mypassword
+# e.g. 输出：x1sG/8G/6M0f6
+```
+
+### 4.2 生成 MD5 哈希
+
+```bash
+openssl passwd -1 mypassword
+# e.g. 输出：$1$gH4jdKz7$Oj3uR3eJU1wC5zqfZ0pFQ0
+```
+
+### 4.3 生成带指定盐的 SHA‑256 哈希
+
+```bash
+openssl passwd -5 -salt mysalt123 mypassword
+# e.g. 输出：$5$mysalt123$YcX3K2h6K6cR2ZNmJgWmYhPG0W6Yh/DGz4G/Do1nGx1
+```
+
+### 4.4 生成 SHA‑512 哈希（从 stdin 读取）
+
+```bash
+echo -n "mysecret" | openssl passwd -6 -salt s@1tValu3 -stdin
+# e.g. 输出：$6$s@1tValu3$zNkMfB7jVcK5JIu0QxZL…(共86字符)
+```
+
+---
+
+## 5. 其他有用选项
+
+* `-quiet`：仅输出结果，不显示提示。
+* `-noverify`：不要求交互式再次输入密码（配合 `-stdin` 使用无效）。
+* `-help`：查看所有可用选项。
+
+```bash
+openssl passwd -help
+```
+
+---
+
+## 6. 将哈希写入系统账户
+
+生成的哈希可以直接替换系统 `/etc/shadow` 中对应用户的密码字段：
+
+```bash
+# 假设为用户 alice 生成 SHA‑512 哈希
+hash=$(openssl passwd -6 -salt mysalt alice_password)
+sudo usermod -p "$hash" alice
+```
+
+---
+
+通过以上参数与示例，你可以根据安全性需求选用不同算法、手动或自动生成盐值，并灵活地在脚本中批量生成或更新系统密码哈希。

@@ -1,0 +1,77 @@
+John the Ripper（简称 John）是一款功能强大的密码破解工具，支持多种加密算法和破解模式。以下是一些常见的 John 使用命令及解释：
+
+ 基本密码破解
+
+john <密码文件路径>
+
+这是最基本的使用方式，John 会自动检测密码文件的格式，并尝试使用默认的规则和字典来破解密码。
+
+示例：
+
+john hashes.txt
+
+此命令会尝试破解 `hashes.txt` 文件中存储的密码哈希。
+
+ 指定破解模式
+
+john --format=<格式> --mode=<模式> <密码文件路径>
+
+- `--format`：指定密码哈希的格式，常见的格式有 `md5crypt`、`sha256crypt`、`nt` 等。
+- `--mode`：指定破解模式，常见的模式有 `single`（单字符集模式）、`wordlist`（字典模式）、`incremental`（增量模式）等。
+
+# 字典模式
+
+john --format=nt --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
+
+这个命令使用 `nt` 格式，以 `rockyou.txt` 字典文件中的单词作为尝试密码，来破解 `hashes.txt` 中的密码哈希。
+
+# 增量模式
+
+john --format=md5crypt --incremental hashes.txt
+
+该命令使用 `md5crypt` 格式，通过增量模式，尝试所有可能的字符组合来破解密码。
+
+ 查看破解进度
+
+john --show <密码文件路径>
+
+此命令用于查看已经破解出的密码。如果密码还在破解过程中，它会显示已经破解出的部分。
+
+示例：
+
+john --show hashes.txt
+
+
+ 恢复破解会话
+
+john --restore
+
+当你之前的破解会话被中断（如意外关闭终端），可以使用该命令恢复之前的破解进度。
+
+ 自定义规则
+
+john --rules=<规则名称> --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
+
+可以使用自定义规则来修改字典中的单词，增加破解的可能性。例如，`--rules=Best64` 会应用一些常见的密码修改规则。
+
+示例：
+
+john --rules=Best64 --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
+
+
+ 清理破解会话
+
+john --make-charset=<字符集文件名>
+
+可以创建自定义的字符集文件，用于增量模式或其他模式。
+
+示例：
+
+john --make-charset=mycharset.chr
+
+
+ 其他常用选项
+- `--fork=<线程数>`：指定使用的线程数，加快破解速度。
+- `--timeout=<时间>`：设置破解的时间限制，超过该时间后自动停止。
+
+这些命令可以帮助你利用 John the Ripper 进行不同类型的密码破解任务。在实际使用中，你可以根据具体需求选择合适的命令和选项。需要注意的是，密码破解应该在合法授权的情况下进行。 

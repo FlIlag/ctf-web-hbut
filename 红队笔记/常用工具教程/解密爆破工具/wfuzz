@@ -1,0 +1,66 @@
+### wfuzz 基础语法与核心参数
+
+wfuzz 是 Kali Linux 中强大的 Web 应用模糊测试工具，基于 Python 开发，可对 URL、参数、表单等进行自动化漏洞探测。其核心语法为：
+
+```bash
+wfuzz [参数] URL
+```
+
+### 关键参数详解
+
+1. **字典与替换标记**
+   - `-w 字典路径`：指定字典文件，如 `/usr/share/wfuzz/wordlist/general/common.txt`
+   - `FUZZ`：URL 中的替换标记，会被字典中的值逐一替换
+   ```bash
+   # 测试不同的文件路径
+   wfuzz -w /usr/share/seclists/Discovery/Web-Content/common.txt http://example.com/FUZZ
+   ```
+
+2. **过滤与显示控制**
+   - `-H "Header: value"`：添加 HTTP 头，如 `-H "Cookie: session=123"`
+   - `--hc 状态码`：隐藏指定状态码的结果（如 `--hc 404` 隐藏 404 页面）
+   - `--hw 行数`：隐藏指定响应行数的结果（过滤干扰项）
+   ```bash
+   # 测试参数并过滤常见响应
+   wfuzz -w params.dict -z list,true-false http://example.com/search.php?page=FUZZ&debug=ZFUZZ --hc 404,500
+   ```
+
+3. **并发与性能**
+   - `-t 线程数`：设置并发线程数（默认 20）
+   - `--timeout 秒数`：设置请求超时时间
+   ```bash
+   # 高速扫描（100 线程）
+   wfuzz -t 100 -w big.txt http://example.com/admin/FUZZ
+   ```
+
+4. **参数类型扩展**
+   - `-z 类型,值列表`：生成自定义测试集
+   ```bash
+   # 测试不同的文件扩展名
+   wfuzz -w files.txt -z list,php-aspx-jsp http://example.com/FUZZ.ZFUZZ
+   ```
+
+### 实战案例
+
+1. **目录与文件扫描**
+   ```bash
+   wfuzz -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt --hc 404 http://target.com/FUZZ
+   ```
+
+2. **参数发现**
+   ```bash
+   wfuzz -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt "http://target.com/index.php?FUZZ=test" --hh 12345
+   ```
+
+3. **暴力破解登录表单**
+   ```bash
+   wfuzz -w users.txt -w passwords.txt --hs "Login failed" -d "username=FUZZ&password=FUZ2Z" http://target.com/login.php
+   ```
+
+### 进阶技巧
+
+- **使用代理**：`--proxy http://127.0.0.1:8080`（配合 Burp Suite 分析请求）
+- **递归扫描**：`--recursion --recursion-depth 2`（自动扫描发现的目录）
+- **自定义载荷**：`-z file,/path/to/payloads.txt`（使用自定义攻击向量）
+
+建议从低并发开始测试，避免对目标系统造成过大压力。同时，确保在合法授权的环境中使用该工具。

@@ -12,7 +12,10 @@ web.xml   记录了网站配置信息
 
 /dwr   此目录下很可能内含测试debug页面
 
-
+业务接口调用缺陷：应用的业务接口存在缺陷，可以通过业务接口直接进行恶意操作。
+**测试方法**：把业务逻辑和功能模块呈现的内容结合，推测出隐藏的API接口。如用户信息的接口是http://www.xxx.com/api/user/userInfo，
+推测重置密码接口可能是http://www.xxx.com/api/user/passReset，文件上传接口是http://www.xxx.com/api/user/uploadFile等。如果这些接口没有限制访问，则可以直接调用并提交数据。 
+**风险分析**：攻击者可通过编写API枚举脚本，恶意调用敏感接口，从而进行提交数据等操作。 
 
 
 

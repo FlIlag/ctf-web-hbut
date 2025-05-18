@@ -49,7 +49,7 @@ wfuzz [参数] URL
 
 2. **参数发现**
    ```bash
-   wfuzz -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt "http://target.com/index.php?FUZZ=test" --hh 12345
+   wfuzz -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt "http://target.com/index.php?FUZZ=test" 
    ```
 
 3. **暴力破解登录表单**

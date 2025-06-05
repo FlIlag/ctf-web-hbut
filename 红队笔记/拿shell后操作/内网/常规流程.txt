@@ -6,3 +6,5 @@ natstart -ano
 nat share
 4.查看当前主机连接用户：
 net session
+5.查看进程：
+tasklist

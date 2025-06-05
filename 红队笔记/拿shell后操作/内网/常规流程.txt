@@ -2,3 +2,7 @@
 systeminfo
 2.查看开发端口：
 natstart -ano
+3.查看当前主机开启的共享列表：
+nat share
+4.查看当前主机连接用户：
+net session

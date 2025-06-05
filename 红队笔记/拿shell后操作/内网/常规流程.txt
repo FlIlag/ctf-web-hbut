@@ -1,4 +1,4 @@
-1.拿到shell后先确定操作系统：
+1.拿到shell后先确定操作系统和查看域：
 systeminfo
 2.查看开发端口：
 natstart -ano

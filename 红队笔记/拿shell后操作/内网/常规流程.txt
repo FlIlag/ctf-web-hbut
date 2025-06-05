@@ -1,0 +1,2 @@
+1.拿到shell后先确定操作系统：
+systeminfo

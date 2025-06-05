@@ -1,0 +1,11 @@
+内网渗透常用端口:
+53:
+DNS 服务，在使用中需要用到 TCP/UDP 53 端口，AD 域的核心就是 DNS 服务器，AD 通过 DNS 服务器定位资源
+88:
+Kerberos 服务，在使用中需要用到 TCP/UDP 88 端口，Kerberos 密钥分发中心 (KDC) 在该端口上侦听 Ticket 请求
+135:
+135 端口主要用于使用 RPC 协议并提供 DCOM 服务。
+137:
+NetBIOS-NS (名称服务)，在使用中需要用到 TCP/UDP 137 端口
+139:
+Session Server (会话服务), 在使用中需要用到 TCP/UDP 139 端口，允许两台计算机建立连接

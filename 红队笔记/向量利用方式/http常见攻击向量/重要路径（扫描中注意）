@@ -17,5 +17,5 @@ web.xml   记录了网站配置信息
 推测重置密码接口可能是http://www.xxx.com/api/user/passReset，文件上传接口是http://www.xxx.com/api/user/uploadFile等。如果这些接口没有限制访问，则可以直接调用并提交数据。 
 **风险分析**：攻击者可通过编写API枚举脚本，恶意调用敏感接口，从而进行提交数据等操作。 
 
-
+数据库配置文件，可能存在数据库密码config.php、web.config、conn.asp、db.php/asp、jdbc.properties、sysconfig.properties、JBOSS_HOME\docs\examples\jca\XXXX-ds.xml
 

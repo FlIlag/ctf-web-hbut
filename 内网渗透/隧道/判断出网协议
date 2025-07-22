@@ -14,5 +14,7 @@
     iptables -A PREROUTING -t nat -p tcp --dport 1:65535 -j REDIRECT --tp-port 34444
     再监听下34444 ： nc -lvp 34444
     然后再扫端口
+    恢复的话：
+    iptables -t nat -F 清楚所有iptables规则
 出网协议有3种：
 icmp,dns,http

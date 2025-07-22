@@ -1,0 +1,22 @@
+frp:
+  配置文件：frps.ini
+  vps:
+  一般只改port，user和passwd和鉴权token
+  启动服务端:./frps -c frps.ini
+  访问web页面ip:dashboard_port
+  客户端：
+  配置文件：frpc.ini
+  server_addr:服务端ip,server_port:服务端连接端口
+  pool_count连接池大小，一般设置5就行
+  token：和服务端必须一模一样
+  use_encryption和use_compression一般为true
+  health_check_type:可选tcp和http,health_check_interval_s:健康检查周期100
+
+  代理配置:
+  frpc.ini:
+  remote_port:服务端绑定端口,代理使用的端口，1080，用户访问该端口的请求全会转发到local_ip:local_port
+
+  客户端运行：frpc.exe -c frpc.ini
+
+  frp映射：
+  

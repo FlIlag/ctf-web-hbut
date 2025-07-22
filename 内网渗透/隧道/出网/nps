@@ -1,0 +1,4 @@
+https://github.com/ehang-io/nps
+服务端配置文件：
+  nps/conf/nps.conf
+  有域名代理地址和端口，web图形化界面地址和端口，bridge地址和端口（该端口是服务端和客户端连接的端口）

@@ -1,0 +1,9 @@
+无法出网的情况有这几种：限制出网ip，限制出网a端口，限制出网协议。
+1.探测出网端口：
+  对于linux：
+    1.使用命令：for i in {1..999};do timeout 0.5 bash -c "echo >/dev.tcp/baidu.com/$i" && echo "&i************open******" || echo "&i closed";done >> result.txt
+    {1..999}可以换成{1，3，4，5，6，7，88，80}来探测常见端口
+    2.nmap -sT -Pn -p- -v www.baidu.com    前提是给对方主机上传nmap软件
+    
+出网协议有3种：
+icmp,dns,http

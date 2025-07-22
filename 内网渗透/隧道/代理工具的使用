@@ -1,0 +1,16 @@
+proxychains-ng
+  配置文件路径:/etc/proxychains.conf
+    配置文件中只需要修改proxylist下的数据
+    socks5 0.0.0.0 1080
+    #socks5 0.0.0.0 10000 admin 123456
+    #socks4 0.0.0.0 1080
+    一般只需要改第一行的端口，改为你希望的代理端口
+    加用户名密码用第二行
+    socks4代理一般不用
+  使用命令：
+    1.不显示细节：proxychains4 -q curl http://ip/1.txt  -q就是不显示细节，该命令意思是通过代理访问该网址、
+    proxychains4 -q nmap -sT -pN -P- 内网ip     该命令是 通过该代理运行nmap命令
+    总之就是proxychains4 后加具体的命令
+
+proxifier
+      windows工具

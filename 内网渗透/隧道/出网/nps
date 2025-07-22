@@ -2,3 +2,9 @@ https://github.com/ehang-io/nps
 服务端配置文件：
   nps/conf/nps.conf
   有域名代理地址和端口，web图形化界面地址和端口，bridge地址和端口（该端口是服务端和客户端连接的端口）
+启动服务端：
+  ./nos start
+  查看监听端口：netstat -pantu | grep nps 检测是否有4个，不然就是被占用了
+  访问web页面，点击新增客户端，设置密匙
+客户端连接：
+  npc.exe -server=vps_ip:bridge_ip -vkey=密匙

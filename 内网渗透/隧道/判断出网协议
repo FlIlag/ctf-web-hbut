@@ -1,10 +1,18 @@
 无法出网的情况有这几种：限制出网ip，限制出网a端口，限制出网协议。
 1.探测出网端口：
   对于linux：
-    1.使用命令：for i in {1..999};do timeout 0.5 bash -c "echo >/dev.tcp/baidu.com/$i" && echo "&i************open******" || echo "&i closed";done >> result.txt
+    1.使用命令：for i in {1..65535};do timeout 0.5 bash -c "echo >/dev.tcp/baidu.com/$i" && echo "&i************open******" || echo "&i closed";done >> result.txt
     {1..999}可以换成{1，3，4，5，6，7，88，80}来探测常见端口
     2.nmap -sT -Pn -p- -v www.baidu.com    前提是给对方主机上传nmap软件
-    3.masscan -p 80,443,8000-9000 主机自身ip --rate=10000
-    4../fscan -h 主机自身ip -p 1-65535
+    3.masscan -p 80,443,8000-9000 攻击机ip --rate=10000
+    4. ./fscan -h 攻击机ip -p 1-65535    前提是给对方主机上传fscan
+
+  对于windows:
+    1.fscan，同linux
+  对于攻击机：
+    为了防止端口开放不全导致探测出网端口不全，所有将所有端口的流量转发到一个端口：
+    iptables -A PREROUTING -t nat -p tcp --dport 1:65535 -j REDIRECT --tp-port 34444
+    再监听下34444 ： nc -lvp 34444
+    然后再扫端口
 出网协议有3种：
 icmp,dns,http

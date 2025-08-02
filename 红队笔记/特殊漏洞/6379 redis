@@ -26,7 +26,8 @@ ssh-keygen -t rsa
 // 防止乱码,导出key
 (echo -e "\n\n"; cat id_rsa.pub; echo -e "\n\n") > key.txt
 // 导入内容
-cat key.txt| redis-cli -h 192.168.253.135 -x set putsshkey
+cat key.txt | redis-cli -h 118.195.183.108 -p 6379 -x set putsshkey 
+
 2 远程连接Redis服务器并写入公钥
 连接后在目标主机执行：
 // 设置路径

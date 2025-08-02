@@ -1,0 +1,2 @@
+for seg in 172.16.10. 172.25.20. 172.26.30.; do for host in {1..254}; do ip=$seg$host; ping -c1 -W1 $ip >/dev/null 2>&1 && echo "[可达] $ip" || :; done; echo "--- 网段 $seg0/24 扫描结束 ---"; done
+ip部分自行更改；

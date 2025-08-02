@@ -1,2 +1,5 @@
 for seg in 172.16.10. 172.25.20. 172.26.30.; do for host in {1..254}; do ip=$seg$host; ping -c1 -W1 $ip >/dev/null 2>&1 && echo "[可达] $ip" || :; done; echo "--- 网段 $seg0/24 扫描结束 ---"; done
 ip部分自行更改；
+
+for ip in 172.16.10.1; do for port in {1..1000}; do (nc -zv -w1 $ip $port 2>&1 | grep -q "succeeded" && echo "[$ip] 开放端口: $port") & done; wait; done
+扫端口；

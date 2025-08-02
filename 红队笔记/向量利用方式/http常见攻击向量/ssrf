@@ -1,3 +1,15 @@
+https://xz.aliyun.com/news/7001
+
+
+
+
+
+
+
+
+
+
+
 *服务器端请求伪造（SSRF）
 **漏洞描述**：服务端请求伪造攻击（Server-side Request Forgery）：很多web应用都提供了从其他的服务器上获取数据的功能。使用用户指定的URL，web应用可以获取图片，下载文件，读取文件内容等。
 这个功能如果被恶意使用，可以利用存在缺陷的web应用作为代理攻击远程和本地的服务器。这种形式的攻击称为服务端请求伪造攻击（Server-side Request Forgery）。

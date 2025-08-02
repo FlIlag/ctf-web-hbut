@@ -1,8 +1,11 @@
 https://xz.aliyun.com/news/7001
 
-
-
-
+ssrf的利用常见于内网，借助ssrf漏洞，利用dict协议爆破存活主机：
+url=dict://178.1.1.0/24
+然后再存活主机中尝试远程file协议读取本机文件和共享文件
+再尝试能否找到存货主机中的redis漏洞
+利用dict://协议远程访问6379执行redis命令，尝试未授权拿shell
+如果存活主机中存在有开启80端口的，尝试redis写马弹shell
 
 
 

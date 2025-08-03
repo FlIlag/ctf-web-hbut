@@ -1,0 +1,7 @@
+数据库凭证搜索
+linux:
+find . -name "*.php" -exec grep "database" {} +
+  find . -name "*.php"：递归查找当前目录（.）下所有文件名匹配 *.php 的文件
+  | xargs grep "database"：通过管道将找到的文件列表传递给 grep，搜索包含 database 字符串的行
+powershell：
+dir -recurse *.php | Select-String -pattern "database"

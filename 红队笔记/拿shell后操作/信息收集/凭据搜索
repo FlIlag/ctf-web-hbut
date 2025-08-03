@@ -5,3 +5,10 @@ find . -name "*.php" -exec grep "database" {} +
   | xargs grep "database"：通过管道将找到的文件列表传递给 grep，搜索包含 database 字符串的行
 powershell：
 dir -recurse *.php | Select-String -pattern "database"
+
+查询已安装的应用
+apt list --installed 
+windows直接进入C:\Program Files (x86)就行了
+
+当发现用户按照浏览器时，可以网上搜索浏览器铭感信息储存位置，里面会保存的有用户在浏览器中保存的凭据（密码）
+

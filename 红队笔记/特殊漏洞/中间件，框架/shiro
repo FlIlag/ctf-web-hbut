@@ -2,3 +2,7 @@
 2.CVE-2020-1957  配合spring实现权限绕过，构造恶意请求/xxx/..;/admin/     Apache Shiro < 1.5.2
 3.CVE-2020-11989  配合spring实现权限绕过，通过在 URL 中插入 ;/   “/;/admin/xx”  或使用双重编码的方式，可以绕过 Shiro 的权限检查
 4.CVE-2020-13933 同样是shiro和spring匹配方式冲突的问题，构造恶意请求 /admin/%3bxxx ，绕过shiro权限检查
+5.CVE-2020-17510 同上，只不过这次是点号“.”, /admin/%2e
+6.CVE-2020-17523 这次是空格， /admin/%20
+7.CVE-2021-41303 这次是/ ， /admin/anonPage/ 可访问，/admin/anonPage 不可
+8.CVE-2023-22602  /admin/../

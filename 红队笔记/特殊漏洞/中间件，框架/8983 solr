@@ -1,1 +1,11 @@
-
+https://blog.csdn.net/yangbz123/article/details/117827547
+CVE-2017-12629 rce 版本小于7.1 ，有poc
+CVE-2017-12629 xxe 版本小于7.1
+CVE-2019-17558 任意文件读取 漏洞利用需要两步，首先利用Config API打开默认关闭的requestDispatcher.requestParsers.enableRemoteStreaming开关，然后进行文件读取  Solr <= 8.8.1
+CVE-2019-0192 rce  Solr 5.0.0-5.5.5  Solr 6.0.0-6.6.5 
+CVE-2019-0193 rce  Solr < 8.2.0
+CVE-2020-13957 未授权上传 Apache Solr 6.6.0 -6.6.5 Apache Solr 7.0.0 -7.7.3 Apache Solr 8.0.0 -8.6.2
+CVE-2021-27905 ssrf  Solr < 8.8.2
+CVE-2024-45216 身份认证绕过 https://xz.aliyun.com/news/15670  Apache Solr < 8.11.4 Apache Solr < 9.7.0
+CNVD-2023-27598 rce 8.10.0 <= Apache Solr < 9.2.0
+CVE-2021-44548 敏感信息泄露 https://www.freebuf.com/vuls/333587.html  Apache Solr < 8.11.1 （仅Windows）

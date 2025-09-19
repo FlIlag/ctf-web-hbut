@@ -1,0 +1,6 @@
+特征1 --- .ashx
+看到url是 .ashx后缀的
+
+特征2 --- 响应体是xml
+
+都可以用xxe测试payload测试

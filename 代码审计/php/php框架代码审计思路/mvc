@@ -1,0 +1,4 @@
+mvc可以在php文件下直接通过参数调用该文件下的类并选取函数并对get/post参数进行赋值,不需要调用函数触发，
+eg:admin.php?a=tem&m=editfile&dir=../../../../etc/passwd
+tem是类，editfile是函数，dir是参数
+注意，参数只能控制get/post等用户能传入的参数

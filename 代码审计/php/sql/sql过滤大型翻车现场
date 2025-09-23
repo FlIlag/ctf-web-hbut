@@ -7,7 +7,7 @@ $id = mysqli_real_escape_string($GLOBALS["___mysqli_ston"], $id);
 $query = "SELECT first_name, last_name FROM users WHERE user_id = $id;";
 补救方式：$id加一个intval进行强制转换
 
-3.使用了及其严格的全局过滤，但对数组只对key=>value中的value进行遍历过滤，没有对key进行过滤
+3.上传的数据以数组储存，但对数组只对key=>value中的value进行遍历过滤，没有对key进行过滤
 eg:
 function escape_string($string, $dropStr = true)
 {

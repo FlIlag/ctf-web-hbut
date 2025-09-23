@@ -1,0 +1,9 @@
+1，urldecode() 本身不危险，就是一个url编码解码函数，但如果是过滤后使用了这个函数，就会导致攻击者
+使用双重url编码，编码注入语句，绕过该防火墙
+
+2.使用了转义函数(转义特殊字符防止闭合)但是sql语句本身没有用单引号双引号等需要闭合的符号
+eg:
+$id = mysqli_real_escape_string($GLOBALS["___mysqli_ston"], $id);
+$query = "SELECT first_name, last_name FROM users WHERE user_id = $id;";
+补救方式：$id加一个intval进行强制转换
+

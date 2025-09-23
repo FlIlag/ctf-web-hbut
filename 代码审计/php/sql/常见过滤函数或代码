@@ -1,1 +1,9 @@
 intval等强制转换函数，强制将字符串转换
+
+mysqli_real_escape_string()：用于转义SQL语句中的特殊字符，以防止SQL注入并确保字符串能够正确插入数据库。
+
+addslashes()：在预定义字符（单引号、双引号、反斜杠和NULL）前添加反斜杠。这个函数可以用于简单的字符串转义，但不如mysqli_real_escape_string()安全，因为它不考虑数据库连接的字符集。
+
+preg_quote()：用于转义正则表达式中的特殊字符。
+
+stripslashes(string): 反转义

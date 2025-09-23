@@ -1,0 +1,11 @@
+mysql:
+### 连接数据库
+mysqli_connect(host, username, password, dbname, port, socket);
+### 执行数据库查询
+mysqli_query(connection, query, resultmode);
+### 获取关联数组（关键字索引）
+mysqli_fetch_array(result, MYSQLI_ASSOC);
+mysqli_fetch_assoc(result);
+###获取索引数组（数字索引）
+mysqli_fetch_array(result, MYSQLI_NUM);
+mysqli_fetch_row(result);

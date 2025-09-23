@@ -1,0 +1,19 @@
+#常见漏洞关键字:
+SQL注入:
+select insert update mysql_query mysqli等
+文件上传:
+$_FILES, type="file", 上传, move_uploaded_file()等
+XSS跨站:
+print print_r echo sprintf die var_dump var_export等
+文件包含:
+include include_once require require_once等
+代码执行:
+eval assert preg_replace call_user_func call_user_func_array等
+命令执行:
+system exec shell_exec `` passthru pcntl_exec popen proc_open
+变量覆盖:
+extract() parse_str() importrequestvariables() $$等
+反序列化:
+serialize() unserialize() __construct __destruct等
+其他漏洞:
+unlink() file_get_contents() show_source() file() fopen()等

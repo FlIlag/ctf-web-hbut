@@ -17,3 +17,13 @@ extract() parse_str() importrequestvariables() $$等
 serialize() unserialize() __construct __destruct等
 其他漏洞:
 unlink() file_get_contents() show_source() file() fopen()等
+
+#通用关键字:
+$_GET,$_POST,$_REQUEST,$_FILES,$_SERVER等
+
+功能点或关键字分析可能存在漏洞
+抓包或搜索关键字找到代码出处及对应文件
+追踪过滤或接受的数据函数，寻找触发此函数或代码的地方进行触发测试
+
+-常规或部分MVC模型源码可以采用关键字的搜索挖掘思路
+-框架MVC查看源码一般会采用功能点分析抓包追踪挖掘思路

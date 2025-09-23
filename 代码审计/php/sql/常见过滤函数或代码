@@ -7,3 +7,8 @@ addslashes()：在预定义字符（单引号、双引号、反斜杠和NULL）�
 preg_quote()：用于转义正则表达式中的特殊字符。
 
 stripslashes(string): 反转义
+
+htmlspecialchars():PHP中用于将特殊字符转换为HTML实体的函数，目的是防止跨站脚本攻击（XSS）。
+它将以下字符转换为对应的HTML实体：
+&（和号）成为 & ；"（双引号）成为 " ；'（单引号）成为 ' (或'，但HTML标准中更常用')
+<（小于）成为 <；（大于）成为 >

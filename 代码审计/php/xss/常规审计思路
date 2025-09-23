@@ -1,0 +1,10 @@
+1.由于php前后端不分离，可以直接在php中查找html标签或者查找拼接符号“.=”，寻找输出html的功能点
+eg:
+if( array_key_exists( "name", $_GET ) && $_GET[ 'name' ] != NULL ) {
+    // Get input
+    $name = str_replace( '<script>', '', $_GET[ 'name' ]')>
+
+    // Feedback for end user
+    $html .= "<pre>Hello ${name}</pre>";
+}
+

@@ -4,3 +4,12 @@
 若存在则跳转。
 
 1.这种的就是首先看有没有任意文件删除漏洞，实现删除该限制文件
+
+2.限制条件判定后没有退出进程，导致进程持续存在，导致攻击者可以通过发送重装包实现劫持
+eg:正常代码：
+if (file_exists($_SERVER["DOCUMENT_ROOT"] . '/sys/install.lock')) {
+    header("Location: ../index.php");
+    exit();
+}
+可以发现，在跳转后有一个exit()，这个就是跳转并结束该install.php进程
+如果没有exit(),就存在重装漏洞，可以通过发包绕过跳转

@@ -13,3 +13,6 @@ if (file_exists($_SERVER["DOCUMENT_ROOT"] . '/sys/install.lock')) {
 }
 可以发现，在跳转后有一个exit()，这个就是跳转并结束该install.php进程
 如果没有exit(),就存在重装漏洞，可以通过发包绕过跳转
+
+3.如果发现有重装漏洞后的下一步测试，查看是否存在rce,因为重装一定会将dataname的名字和地址写入
+config.php，而如果写入了木马就能实现rce,所以如果不存在过滤，就会存在rce

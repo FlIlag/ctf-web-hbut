@@ -7,3 +7,29 @@ $id = mysqli_real_escape_string($GLOBALS["___mysqli_ston"], $id);
 $query = "SELECT first_name, last_name FROM users WHERE user_id = $id;";
 补救方式：$id加一个intval进行强制转换
 
+3.使用了及其严格的全局过滤，但对数组只对key=>value中的value进行遍历过滤，没有对key进行过滤
+eg:
+function escape_string($string, $dropStr = true)
+{
+    if (!$string) {
+        return $string;
+    }
+    
+    if (is_array($string)) { // 数组处理
+        foreach ($string as $key => $value) {
+            $string[$key] = escape_string($value, $dropStr);
+        }
+    } elseif (is_object($string)) { // 对象处理
+        foreach ($string as $key => $value) {
+            $string->$key = escape_string($value, $dropStr);//escape_string是递归该函数，使得value的值作为字符串进入else路线，但没有对key过滤
+        }
+    } else { // 字符串处理
+        if ($dropStr) {
+            $string = preg_replace('/(0x7e)|(0x27)|(0x22)|(updatedxml)|(name_const)|(concat)/i', '', $string);
+        }
+        $string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+        $string = addslashes($string);
+    }
+    return $string;
+}
+

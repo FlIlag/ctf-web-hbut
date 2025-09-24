@@ -1,3 +1,12 @@
 1.文件上传时将文件名或者后缀作为变量放入system函数中且没有任何过滤，此时攻击者可以将文件命名
 为 &whoami&1.txt实现rce
 2.某个代码有写php文件的权限(config.php),且写入的内容能由用户自定义，此时写入木马就能rce
+
+3.喜欢炫技，使用 eval("\$ret = strtolower(\"$data\");");
+使用转换为字符串函数防止被eval执行，但是没有对用户输入进行转义导致被  ')     '闭合
+或者直接利用php特性  赋值为${phpinfo()}，优先执行phpinfo()实现绕过
+其实完全可以写为
+$data = $_GET['data'];
+$ret = strtolower($data); // 直接赋值，不使用eval
+echo $ret;
+

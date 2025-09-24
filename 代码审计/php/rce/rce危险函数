@@ -27,6 +27,8 @@ passthru('cat /etc/passwd');
 $output = `ls -l`;
 echo $output;
 
+preg_replace()
+
 proc_open()
 $process = proc_open('whoami', [
     0 => ['pipe', 'r'], // stdin

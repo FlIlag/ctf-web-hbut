@@ -1,5 +1,6 @@
 1.文件上传时将文件名或者后缀作为变量放入system函数中且没有任何过滤，此时攻击者可以将文件命名
 为 &whoami&1.txt实现rce
+
 2.某个代码有写php文件的权限(config.php),且写入的内容能由用户自定义，此时写入木马就能rce
 
 3.喜欢炫技，使用 eval("\$ret = strtolower(\"$data\");");
@@ -10,3 +11,17 @@ $data = $_GET['data'];
 $ret = strtolower($data); // 直接赋值，不使用eval
 echo $ret;
 
+4.文件包含可控且开启了   allow url include = on;
+data:text/plain,<?php phpinfo();?>
+即可包含该文件，实现rce
+
+5.preg_replace(),用了/e ,当 PHP 的 preg_replace() 函数在模式（pattern）中使用了 /e 模式修饰符时，如果匹配成功，
+替换字符串（replacement）中的代码会被执行，这可能导致代码注入漏洞。
+preg_replace($pattern, $replacement, $subject, $limit, $count) 用于搜索 subject 中匹配 pattern 的部分，
+并用 replacement 进行替换。
+参数说明：
+$pattern：要搜索的模式，可以是字符串或字符串数组。
+$replacement：用于替换的字符串或字符串数组。
+$subject：要搜索替换的目标字符串或字符串数组。
+$limit（可选）：每个模式对每个 subject 字符串的最大可替换次数，默认 -1（无限制）。
+$count（可选）：记录替换执行的次数。

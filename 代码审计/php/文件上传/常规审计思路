@@ -1,13 +1,7 @@
 move_uploaded_file(file, newloc) 函数将上传的文件移动到新位置。
-strtolower() 函数把字符串转换为小写。
-trim() 函数移除字符串两侧的空白字符或其他预定义字符。
-strrchr() 函数查找字符串在另一个字符串中最后一次出现的位置，并返回从该位置到字符串结尾的所有字符。
-str_ireplace() 函数替换字符串中的一些字符（不区分大小写）。
-getimagesize() 函数用于获取图像大小及相关信息，成功返回一个数组，失败则返回 FALSE 并产生一条 E_WARNING 级的错误信息。
-exit_imagetype() 读取一个图像的第一个字节并检查其签名。
-substr() 函数返回字符串的一部分。
 fopen() 函数打开文件或者 URL。
 fredd() 函数读取文件（可安全用于二进制文件）。
 fwrite() 函数写入文件（可安全用于二进制文件）。
 
 一般还是功能点入手，以上为常见文件操作函数
+全局搜索建议查找move_uploaded_file和fwrite

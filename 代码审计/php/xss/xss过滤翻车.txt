@@ -1,3 +1,5 @@
 1.过滤中将<script>等标签替换为空，但没有递归或循环替换，导致可以双写绕过 
 eg:
 ##<scri<script><pt>
+
+2.htmlspecialchars()使用后使用htmlspecialchars_decode()，用了跟没用一样

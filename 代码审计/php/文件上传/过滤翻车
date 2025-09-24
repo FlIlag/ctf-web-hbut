@@ -1,0 +1,3 @@
+经典mime绕过代码：
+if (($_FILES['upload_file']['type’] == ‘image/jpeg') || ($_FILES['upload_file']['type'] == ‘image/png') || (g$_FILES["upload_file'"]['type'"] ‘image/gif'))
+

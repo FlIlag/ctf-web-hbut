@@ -1,0 +1,8 @@
+include()
+include_once()
+require()
+require_once()
+fopen()
+readfile()
+
+基本就这几个函数造成文件包含了，全局搜索即可

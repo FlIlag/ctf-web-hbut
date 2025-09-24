@@ -1,3 +1,122 @@
-eval
-assert
-call_user_func
+1. 直接代码执行函数
+eval()
+eval('echo "Hello World";');
+eval($_GET['code']); // 高危！
+
+assert()
+assert('2 > 1');
+assert($_POST['code']); // PHP < 8.0 可执行代码
+
+2. 系统命令执行函数
+system()
+system('ls -la');
+system($_GET['cmd']); // 高危！
+
+exec()
+exec('whoami', $output);
+echo implode("\n", $output);
+
+shell_exec()
+$result = shell_exec('pwd');
+echo $result;
+
+passthru()
+passthru('cat /etc/passwd');
+
+反引号运算符
+$output = `ls -l`;
+echo $output;
+
+proc_open()
+$process = proc_open('whoami', [
+    0 => ['pipe', 'r'], // stdin
+    1 => ['pipe', 'w'], // stdout
+    2 => ['pipe', 'w']  // stderr
+], $pipes);
+
+echo stream_get_contents($pipes[1]);
+proc_close($process);
+
+popen()
+$handle = popen('ls -l', 'r');
+echo fread($handle, 2096);
+pclose($handle);
+
+3. 动态函数调用
+call_user_func()
+call_user_func('system', 'id');
+call_user_func($_GET['func'], $_GET['arg']);
+
+call_user_func_array()
+call_user_func_array('system', ['whoami']);
+
+forward_static_call()
+forward_static_call(['MyClass', 'method'], $arg);
+
+5. 动态代码生成和执行
+create_function()（已弃用）
+// 创建匿名函数（内部使用eval）
+$func = create_function('$a', 'return system($a);');
+$func('whoami');
+
+preg_replace() 的 /e 修饰符（已移除）
+// PHP 5.x 中的危险用法（已移除）
+preg_replace('/.*/e', 'system("whoami")', 'test');
+
+7. 反射API（可间接执行）
+ReflectionFunction
+// 通过反射调用函数
+$func = new ReflectionFunction('system');
+$func->invoke('whoami');
+
+ReflectionMethod
+// 通过反射调用方法
+$method = new ReflectionMethod('MyClass', 'method');
+$method->invoke(new MyClass(), $arg);
+
+8. 回调函数处理
+array_map()
+// 对数组每个元素应用回调
+array_map('system', ['whoami', 'pwd']);
+
+array_walk()
+// 对数组每个元素应用用户函数
+array_walk($array, 'system');
+
+usort() 等排序函数
+// 使用用户自定义比较函数
+usort($array, 'system'); // 危险用法
+
+9. 模板引擎和字符串处理
+动态变量赋值
+// 可变变量
+$func = 'system';
+$$func('whoami'); // 相当于 system('whoami')
+
+动态方法调用
+// 对象方法动态调用
+$obj = new MyClass();
+$method = 'dangerousMethod';
+$obj->$method($input);
+
+10. 数据库相关（间接代码执行）
+SQLite 自定义函数
+// SQLite 允许注册PHP函数
+$db = new SQLite3('database.db');
+$db->createFunction('php_func', 'system', 1);
+$db->query("SELECT php_func('whoami')");
+
+11. 特殊流包装器
+php://input
+// 读取POST原始数据，可用于代码执行
+$code = file_get_contents('php://input');
+eval($code);
+
+data://
+// data URI scheme（需要allow_url_include开启）
+include('data://text/plain;base64,PD9waHAgc3lzdGVtKCJ3aG9hbWkiKTs/Pg==');
+
+12. 图像处理相关（GD库）
+imagecreatefrom* 系列
+// 虽然主要用于图像处理，但可被利用
+$im = imagecreatefromstring($malicious_data);

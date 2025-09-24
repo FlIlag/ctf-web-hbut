@@ -7,3 +7,12 @@ getimagesize() 函数用于获取图像大小及相关信息，成功返回一�
 E_WARNING 级的错误信息。常用于防御仅更改后缀名的木马
 exit_imagetype() 读取一个图像的第一个字节并检查其签名。确认文件头是否为文件
 substr() 函数返回字符串的一部分。
+
+黑名单较为牢固的代码：
+$deny_ext = array('.asp','.aspx','.php','.jsp');
+$file_name = trim($_FILE['upload_file']['name']);  // 注意：应该是 $_FILES
+$file_name = deldot($file_name);  // 删除文件名末尾的点，防止'.php.'
+$file_ext = strrchr($file_name, '.');取后缀名
+$file_ext = strtolower($file_ext);  // 转换为小写，防止大小写绕过
+$file_ext = str_ireplace(':$DATA', '', $file_ext);  // 去除字符串::$DATA，防止indows流特性绕过
+$file_ext = trim($file_ext);  // 收尾去空，防止空格绕过

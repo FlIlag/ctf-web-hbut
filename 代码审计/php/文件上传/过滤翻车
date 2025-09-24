@@ -1,3 +1,4 @@
 经典mime绕过代码：
 if (($_FILES['upload_file']['type’] == ‘image/jpeg') || ($_FILES['upload_file']['type'] == ‘image/png') || (g$_FILES["upload_file'"]['type'"] ‘image/gif'))
 
+str_ireplace()函数，将危险后缀名替换，但没有递归替换导致双写绕过

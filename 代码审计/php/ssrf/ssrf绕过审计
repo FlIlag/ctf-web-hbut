@@ -3,3 +3,7 @@ if(strpos($url, 'http://127.6.6.1/') === 0){
     file_put_contents($path, file_get_contents($url));
     echo "console.log($path update successed!)";
 }
+
+2.遇到过滤非常严格的file_get_contents或者其他文件读取函数readfile等，无法读取文件，此时可以尝试上传url进行ssrf,如果过滤
+条件中包含了必须有后缀，可以找一个url:url/1.jpg也能正常回显的页面即可，页面中包含木马就可以通过ssrf
+尝试拿shell

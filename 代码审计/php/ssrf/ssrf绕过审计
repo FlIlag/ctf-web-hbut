@@ -1,0 +1,5 @@
+1.只限制开头，导致可以 @ 绕过
+if(strpos($url, 'http://127.6.6.1/') === 0){
+    file_put_contents($path, file_get_contents($url));
+    echo "console.log($path update successed!)";
+}

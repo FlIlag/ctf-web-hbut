@@ -12,4 +12,22 @@ curl($url);
 2.file_get_contents导致的ssrf
 file_get_contents($_POST['url']);
 
-
+3.socket导致的ssrf
+function Getfile($host, $port, $link){
+    $fp = fsockopen($host, intval($port), $errno, $errstr, 30);
+    if(!$fp){
+        echo "$errstr (error number $errno) \n";
+    }else{
+        $out = "GET $link HTTP/1.1\r\n";
+        $out .= "HOST $host \r\n";
+        $out .= "Connection: Close\r\n\r\n";
+        $out .= "\r\n";
+        fwrite($fp, $out);
+        $content = "";
+        while(!feof($fp)){
+            $contents .= fgets($fp, 1024);
+        }
+        fclose($fp);
+        return $contents;
+    }
+}

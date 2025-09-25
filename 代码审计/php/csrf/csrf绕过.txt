@@ -1,0 +1,11 @@
+1.有些代码对refer进行判定,所谓同源策略，如果refer不属于该网站，则禁止操作，绕过也比较简单，伪造refer就行了
+eg:
+if( isset( $_GET['Change'] ) ) {
+    // Checks to see where the request came from
+    if( stripos( $_SERVER['HTTP_REFERER'], $_SERVER['SERVER_NAME']) !== false ) {
+    // Get input
+    $pass_new = $_GET['password_new'];
+    $pass_conf = $_GET['password_conf'];
+}
+
+2.checktoken函数，存在这个时，说明是token效验，无法单独触发csrf，需要xss窃取用户token

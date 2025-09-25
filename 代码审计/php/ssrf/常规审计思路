@@ -9,7 +9,7 @@ function curl($url){
 $url = $_GET['url'];
 curl($url);
 
-2.file_get_contents导致的ssrf
+2.file_get_contents，readfile等文件读取函数导致的ssrf，
 file_get_contents($_POST['url']);
 
 3.socket导致的ssrf

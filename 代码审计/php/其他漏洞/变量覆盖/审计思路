@@ -1,0 +1,60 @@
+自定义参数值覆盖其他非自定义参数的值
+
+经常导致变量覆盖漏洞场景有：$使用不当，extract()函数使用不当，parse_str()函数使用不当，
+import_request_variables()使用不当，开启了全局变量注册等。
+
+全局变量覆盖
+extract()变量覆盖
+遍历初始化变量
+import_request_variables变量覆盖
+parse_str()变量覆盖
+
+
+parse_str()变量覆盖
+parse_str — 将字符串解析成多个变量，如果参数str是URL传递入的查询字符串（query string），则将它解析为变量并设置到当前作用域。
+//var.php?var=new
+$var='init';
+parse_str($_SERVER['QUERY_STRING']);
+print $var;
+
+
+extract()变量覆盖
+PHP extract()函数从数组中把变量导入到当前的符号表中。对于数组中的每个元素，键名用于变量名，
+键值用于变量值。
+<?php
+$auth = '0';
+extract($_GET);
+if($auth==1){
+    echo "private!";
+}else{
+    echo "public!";
+}
+?>
+
+
+遍历初始化变量($$变量覆盖)
+常见的一些以遍历的方式释放变量的代码，可能会导致变量覆盖。同时出现$$a和$a,且$a用户可控
+<?php
+$chs = "";
+if($_POST && $charset != 'utf-8'){
+    $chs = new Chinese('UTF-8', $charset);
+    foreach($_POST as $key => $value){
+        $$key = $chs->Convert($value);
+    }
+    unset($chs);
+}
+?>
+
+import_request_variables变量覆盖
+import_request_variables('G')指定导入GET请求中的变量，从而导致变量覆盖。
+<?php
+$auth = '0';
+import_request_variables('G');
+if($auth == 1){
+    echo "private!");
+}
+else{
+    echo "public!");
+}
+?>
+

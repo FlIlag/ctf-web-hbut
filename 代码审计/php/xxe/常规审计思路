@@ -1,0 +1,37 @@
+xxe常见危险函数
+
+// SimpleXML
+$xml = simplexml_load_string($user_input);
+$xml = simplexml_load_file($user_input);
+
+// DOMDocument
+$dom = new DOMDocument();
+$dom->loadXML($user_input);  // 危险
+$dom->load($user_input);     // 危险
+
+// XMLReader
+$reader = new XMLReader();
+$reader->XML($user_input);   // 危险
+$reader->open($user_input);  // 危险
+
+// SimpleXML + DOMDocument 组合
+$sxe = simplexml_import_dom($dom);
+
+$parser = xml_parser_create();
+xml_parse_into_struct($parser, $user_input, $values);
+xml_parser_set_option($parser, XML_OPTION_SKIP_WHITE, 1);
+
+// 危险：默认允许外部实体
+$dom = new DOMDocument();
+$dom->loadXML($xml);
+
+// 危险：LIBXML_NOENT 实际上会展开实体
+$dom->loadXML($xml, LIBXML_NOENT);
+
+// 直接使用用户输入的XML
+$xml_data = $_POST['xml_data'];
+$result = simplexml_load_string($xml_data);
+
+// 从用户提供的URL加载XML
+$url = $_GET['feed_url'];
+$rss = simplexml_load_file($url);

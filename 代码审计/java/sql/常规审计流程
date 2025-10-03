@@ -4,3 +4,18 @@
 String sql = "select + from user where id =?";   
 PreparedStatement pstmt = conn.prepareStatement(sql);
 pstmt.setInt(1, Integer.parseInt(req.getParameter("id")));预编译,强制参数为int
+
+MyBatis 注入分析
+安全写法
+select * from user where name = #{name}
+不安全写法
+select * from user where name = ${name}
+
+Hibernate 部分
+安全写法
+使用命名参数 :name 并调用 setParameter 方法进行参数绑定，会进行预编译。
+Query<User> query = session.createNativeQuery("select * from user where name=:name");
+query.setParameter("name", parameter);
+不安全写法
+通过字符串拼接的方式将用户输入（req.getParameter("id")）直接拼接到SQL语句中，存在SQL注入风险。
+Query<User> query = session.createNativeQuery("select * from user where name=:" + req.getParameter("id"));

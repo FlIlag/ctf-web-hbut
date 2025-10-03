@@ -1,0 +1,6 @@
+对于jdbc框架，
+危险写法：String sql = “select + from user where id ="+req.getparameter(“id");
+正确写法：
+String sql = "select + from user where id =?";   
+PreparedStatement pstmt = conn.prepareStatement(sql);
+pstmt.setInt(1, Integer.parseInt(req.getParameter("id")));预编译,强制参数为int

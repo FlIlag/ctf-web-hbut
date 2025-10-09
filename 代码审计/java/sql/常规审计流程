@@ -1,3 +1,5 @@
+https://www.freebuf.com/articles/vuls/348417.html
+
 对于jdbc框架，
 危险写法：String sql = “select + from user where id ="+req.getparameter(“id");
 正确写法：

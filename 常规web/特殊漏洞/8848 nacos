@@ -1,1 +1,3 @@
+Nacos-SQL注入漏洞(CVE-2021-29442)
+若存在/nacos/v1/cs/ops/derby路径，且访问报错缺少sql参数，则可直接执行select语句
 

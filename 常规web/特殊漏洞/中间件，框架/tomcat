@@ -2,3 +2,13 @@ https://blog.csdn.net/weixin_44268918/article/details/129155293?ops_request_misc
 tomcat默认页的后台弱口令：tomcat:tomcat,admin:admin
 put协议上传jsp木马（哥斯拉生成)
 文件包含（exp可查）
+
+tomcat 条件竞争传shell:CVE-2024-50379,CVE-2024-56337
+https://github.com/SleepingBag945/CVE-2024-50379
+https://www.freebuf.com/articles/web/426158.html
+9.0.0.M1 <= Apache Tomcat <= 9.0.98（已在 9.0.98 或更高版本中修复）
+10.1.0-M1 <= Apache Tomcat <= 10.1.34（已在 10.1.34 或更高版本中修复）
+11.0.0-M1 <= Apache Tomcat <= 11.0.2（在 11.0.2 或更高版本中修复）
+put功能要开启
+
+

@@ -1,3 +1,3 @@
 ctf web知识点汇总
-该库为湖北工业大学ctf团队 flag不队（FlIlag不队）队长编写
+该库为湖北工业大学ctf团队 flag不队（FlIlag不队）队长Fu_1un编写
 ，目前处于更新状态，知识点尚不完整。

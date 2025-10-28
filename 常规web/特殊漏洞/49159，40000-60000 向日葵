@@ -1,0 +1,2 @@
+rce
+页面返回{"success":false,"msg":"Verification failure"}则说明该端口存在CVE-2022-10270漏洞。

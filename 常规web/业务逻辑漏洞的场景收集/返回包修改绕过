@@ -2,3 +2,8 @@
 
 修改msg或类似json返回数据中flase为true
 
+改返回包-改json响应包，包含大量数据和功能点的json响应包如：
+{"data":[{"code":"trainingreq","name":"调查问卷","icon":" glyphicon glyphicon-gift","subMenuGroupList":[{"name":"基础设置","menuList":[{"code":"templatelist","name":"问卷模板管理","icon":"iconfont icon-guanli2","unReadNum":0}]}],"subMenuEmpty":false},....
+这种的往往存在越权，只要把普通用户的功能点json返回包替换为管理员的功能点json返回包就可用普通用户的
+权限访问这些管理员权限功能点。
+所以在登录时，一定要手动拦截，一个一个放包看是否存在这种json响应包。

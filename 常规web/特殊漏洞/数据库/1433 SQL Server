@@ -1,1 +1,6 @@
-
+# SQL Server (1433)
+默认账号: sa
+漏洞: 弱密码爆破、xp_cmdshell提权、SQL注入
+测试: sqsh -S target -U sa
+nmap --script ms-sql-brute -p 1433 target
+xp_cmdshell: 开启后可执行系统命令

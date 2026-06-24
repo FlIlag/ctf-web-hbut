@@ -1,1 +1,4 @@
-
+IMAP 邮件协议 (143)
+漏洞：加密缺失、爆破
+测试命令: curl -k imaps://target --user user:pass
+SMTPS: 465/587

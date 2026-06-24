@@ -1,9 +1,21 @@
-修改返回包的响应码和返回json数据中的code值为200
+# 返回包修改绕过
 
-修改msg或类似json返回数据中flase为true
+## 响应码修改
+```http
+HTTP/1.1 403 Forbidden → 改 200 OK
+{"code":403} → {"code":200}
+```
 
-改返回包-改json响应包，包含大量数据和功能点的json响应包如：
-{"data":[{"code":"trainingreq","name":"调查问卷","icon":" glyphicon glyphicon-gift","subMenuGroupList":[{"name":"基础设置","menuList":[{"code":"templatelist","name":"问卷模板管理","icon":"iconfont icon-guanli2","unReadNum":0}]}],"subMenuEmpty":false},....
-这种的往往存在越权，只要把普通用户的功能点json返回包替换为管理员的功能点json返回包就可用普通用户的
-权限访问这些管理员权限功能点。
-所以在登录时，一定要手动拦截，一个一个放包看是否存在这种json响应包。
+## 状态字段修改
+```json
+{"success":false} → {"success":true}
+{"msg":"error"} → {"msg":"success"}
+{"status":"fail"} → {"status":"success"}
+```
+
+## Json 功能点替换
+登录时拦截返回包
+将普通用户的功能点 json 替换为管理员的功能点 json
+
+## 验证码绕过
+输入错误验证码，修改返回包 msg 绕过

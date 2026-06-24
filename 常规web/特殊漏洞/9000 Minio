@@ -1,1 +1,3 @@
-未授权
+Minio 对象存储 (9000)
+漏洞：未授权访问(CVE-2023-28432)、SSRF
+测试: curl http://target:9000/minio/health/live

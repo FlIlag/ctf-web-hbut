@@ -1,2 +1,4 @@
-weblogic一把梭
-
+WebLogic 中间件 (7001)
+漏洞：反序列化(CVE-2017-3506/CVE-2023-21839)、SSRF、未授权访问
+默认后台: /console
+利用工具: weblogicScanner, Y4er/Weblogic

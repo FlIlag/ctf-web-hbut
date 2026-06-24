@@ -1,0 +1,5 @@
+FastCGI (9000)
+PHP-FPM 默认端口
+漏洞：任意文件读取/代码执行
+测试: curl -H "User-Agent: Q" http://target:9000/...
+利用: gopher:// 配合 SSRF

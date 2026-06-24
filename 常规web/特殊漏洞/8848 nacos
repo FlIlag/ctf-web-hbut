@@ -1,6 +1,5 @@
-Nacos-SQL注入漏洞(CVE-2021-29442)
-若存在/nacos/v1/cs/ops/derby路径，且访问报错缺少sql参数，则可直接执行select语句
-
-nacos身份验证绕过：https://www.freebuf.com/vuls/360606.html
-
-任意用户注册 ：https://blog.csdn.net/xue317378914/article/details/145327114
+Nacos 注册中心 (8848)
+默认账号: nacos/nacos
+漏洞：未授权访问(CVE-2021-29441)、SQL注入、配置泄露
+测试: curl http://target:8848/nacos
+curl http://target:8848/v1/ns/service/list

@@ -1,1 +1,4 @@
-未授权，rce,任意文件下载
+Rsync (873)
+未授权访问
+rsync target::
+rsync -av target::share /tmp/

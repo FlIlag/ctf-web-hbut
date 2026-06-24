@@ -1,1 +1,5 @@
-垂直越权，任意管理员用户注册
+# CouchDB (5984)
+垂直越权、任意管理员用户注册
+CVE-2017-12635/12636: 未授权访问RCE
+测试: curl http://target:5984/
+curl -X PUT http://target:5984/test

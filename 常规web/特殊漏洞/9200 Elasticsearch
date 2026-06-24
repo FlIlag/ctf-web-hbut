@@ -1,0 +1,5 @@
+Elasticsearch (9200)
+漏洞：未授权访问、信息泄露、CVE-2014-3120 RCE
+测试: curl http://target:9200/
+curl http://target:9200/_cat/indices
+curl http://target:9200/_nodes

@@ -1,2 +1,39 @@
-有些后台喜欢把加密的个人信息加密放在返回包中，然后再前端解密显示出来，此时可以通过js逆向得到
-加密算法从而获得个人信息：比如找回密码部分的手机号遍历，身份证号遍历，学号遍历等
+# 前端加密逆向
+
+## 场景
+后台把加密的个人信息放在返回包中，前端解密显示
+可用于：手机号遍历、身份证号遍历、学号遍历
+
+## 分析方法
+```javascript
+// 搜索关键词
+decrypt
+decode
+aes
+des
+rsa
+base64_decode
+atob
+```
+
+## 常用工具
+```bash
+# 抠 JS 加密函数，在 Node 中执行
+node -e "
+// 粘贴前端加密函数
+function decrypt(data) { ... }
+console.log(decrypt('密文'))
+"
+
+# 使用浏览器开发者工具
+Sources → 搜索关键词 → 下断点
+Console → 调用解密函数
+```
+
+## 常见加密方式
+```
+Base64 → atob() / btoa()
+AES → CryptoJS.AES.decrypt()
+RSA → JSEncrypt
+自定义 XOR → 抠函数本地执行
+```

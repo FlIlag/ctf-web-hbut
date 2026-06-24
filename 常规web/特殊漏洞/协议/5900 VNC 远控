@@ -1,1 +1,4 @@
-空口令，密码猜解
+VNC (5900)
+无密码或弱密码
+nmap --script vnc-brute -p 5900 target
+vncviewer target

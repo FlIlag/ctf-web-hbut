@@ -1,3 +1,5 @@
-任意文件读取： /Pic/Indexs?imgs=DJwkiEm6KXJZ7aEiGyN4Cz83Kn1PLaKA09
-
-任意文件上传漏洞： https://blog.csdn.net/IDHALASHAO/article/details/143908731
+OfficeWeb 办公系统
+常见于泛微OA/致远OA等
+漏洞：任意文件上传、SQL注入、SSRF
+默认后台: /login.do
+测试上传: /fileupload.do

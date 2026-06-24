@@ -1,1 +1,7 @@
-
+POP3 邮件协议 (110)
+默认无加密，明文传输
+漏洞：明文密码泄露、爆破
+测试命令: telnet target 110
+USER admin
+PASS pass
+注意 SSL 版本 (995)

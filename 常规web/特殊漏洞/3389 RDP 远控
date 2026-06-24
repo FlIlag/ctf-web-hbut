@@ -1,0 +1,4 @@
+RDP 远程桌面 (3389)
+漏洞：BlueKeep(CVE-2019-0708)、弱密码、NLA绕过
+测试: rdesktop target
+nmap --script rdp-vuln-ms12-020 -p 3389 target

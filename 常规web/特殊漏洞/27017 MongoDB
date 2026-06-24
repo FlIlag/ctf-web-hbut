@@ -1,0 +1,4 @@
+MongoDB (27017)
+漏洞：未授权访问
+测试: mongo --host target
+nmap --script mongodb-info -p 27017 target

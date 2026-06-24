@@ -1,1 +1,4 @@
-
+SMTP (25)
+邮件伪造、用户枚举、中继测试
+VRFY root   EXPN root
+echo "test" | mail -s test user@target.com

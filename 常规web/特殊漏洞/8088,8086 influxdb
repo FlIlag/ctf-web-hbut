@@ -1,0 +1,4 @@
+InfluxDB 时序数据库 (8086/8088)
+漏洞：未授权访问(CVE-2019-20933)
+测试: curl http://target:8086/ping
+curl http://target:8086/query?q=show+databases

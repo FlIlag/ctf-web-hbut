@@ -1,1 +1,6 @@
-未授权getshell
+# Hadoop (50070)
+HDFS WebUI
+漏洞: 未授权访问 → getshell
+测试: curl http://target:50070/dfshealth.html
+curl http://target:50070/conf
+可通过 REST API 管理 HDFS 文件

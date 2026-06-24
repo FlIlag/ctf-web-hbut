@@ -1,1 +1,5 @@
-https://xz.aliyun.com/news/6780
+Node.js 运行时
+漏洞: 原型链污染、SSRF、反序列化
+关键审计: eval/exec/sandbox 绕过
+Express: 中间件顺序错误, body-parser 配置
+关注依赖漏洞: npm audit

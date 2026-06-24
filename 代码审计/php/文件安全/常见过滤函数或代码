@@ -1,1 +1,36 @@
-intval等强制转换函数，强制将字符串转换
+# 文件安全常见过滤函数
+
+## 路径检查
+```php
+// 检查文件是否存在
+file_exists($path);
+is_file($path);
+
+// 获取真实路径（去除 ../）
+realpath($path);
+
+// 路径拼接（安全）
+basename($path);          // 只取文件名
+dirname($path);           // 只取目录
+```
+
+## 后缀白名单
+```php
+$ext = pathinfo($file, PATHINFO_EXTENSION);
+$allow = ['jpg','png','gif'];
+if (!in_array($ext, $allow)) die();
+```
+
+## 危险（易绕过）
+```php
+// 替换 ../ → 双写可绕过 str_replace('../', '', $path) → ....//
+// 检查后缀但只检查末尾 → a.php. 可绕过
+// 只检查黑名单 → 漏掉 php5 php7 pht phtml
+```
+
+## 过滤绕过技巧
+```
+str_replace('../', '', $path) → ....// 可绕过
+preg_replace('/\.\.\//', '', $path) → ..././ 可绕过
+只过滤 ../ 没过滤 ..\ → Windows 下绕过
+```

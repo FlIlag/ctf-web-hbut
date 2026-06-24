@@ -1,2 +1,5 @@
-https://www.freebuf.com/vuls/280508.html
-https://www.dfyxsec.com/2025/05/15/laravel-framework-%e6%95%8f%e6%84%9f%e4%bf%a1%e6%81%af%e6%b3%84%e9%9c%b2%e6%bc%8f%e6%b4%9e%ef%bc%88cve-2024-29291%ef%bc%89/
+Laravel 框架
+漏洞: 反序列化、授权绕过
+调试模式: APP_DEBUG=true 泄露配置
+密钥: APP_KEY 泄露可伪造session
+测试: /routes/web.php, /storage/logs/laravel.log

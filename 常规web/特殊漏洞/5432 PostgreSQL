@@ -1,1 +1,5 @@
-rce ,未授权，sql注入
+PostgreSQL 数据库 (5432)
+默认账号: postgres
+漏洞：弱密码、注入、文件读取
+测试: psql -h target -U postgres
+PGPASSWORD=pass psql -h target -U postgres -d template1

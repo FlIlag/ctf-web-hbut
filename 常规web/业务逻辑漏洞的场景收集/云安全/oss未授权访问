@@ -1,2 +1,27 @@
-图片查看，文件查看等界面，一般会访问oss存储桶，如果返回包中泄露了存储桶地址，可以尝试
-访问，看需不需要身份验证，不需要就是敏感信息泄露。
+# OSS 未授权访问
+
+## 检测方法
+文件查看、图片查看等界面会直接访问 OSS 存储桶
+返回包中泄露了存储桶地址 → 尝试直接访问
+
+## 测试
+```bash
+# 直接访问桶地址
+curl http://bucket-name.oss-cn-hangzhou.aliyuncs.com/
+curl https://s3.amazonaws.com/bucket-name/
+
+# 列举对象
+curl http://bucket-name.oss-cn-hangzhou.aliyuncs.com/?prefix=test
+
+# AWS 列举
+aws s3 ls s3://bucket-name --no-sign-request
+```
+
+## 常见存储桶域名
+```
+阿里云: bucket.oss-cn-region.aliyuncs.com
+AWS:    bucket.s3.amazonaws.com
+AWS:    bucket.s3-region.amazonaws.com
+腾讯云: bucket.cos.ap-region.myqcloud.com
+七牛:   bucket.qiniucdn.com
+```

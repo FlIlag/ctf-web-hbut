@@ -1,1 +1,4 @@
-弱口令，未授权，文件上传，ssrf
+GeoServer 地理服务器
+漏洞：RCE(CVE-2024-36401)、文件上传
+默认后台: /geoserver/web
+默认账号: admin/geoserver

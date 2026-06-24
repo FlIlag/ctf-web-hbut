@@ -1,1 +1,6 @@
-未授权，rce
+Memcached 缓存系统 (11211)
+默认无认证
+漏洞：未授权访问、信息泄露、DDoS放大攻击
+测试: echo -e "stats" | nc target 11211
+echo -e "stats items" | nc target 11211
+echo -e "get key" | nc target 11211

@@ -1,1 +1,4 @@
-CVE-2022-46463 未授权https://www.freebuf.com/vuls/400998.html
+Harbor 仓库 (50000)
+Harbor 镜像仓库
+UI: 443   API: 4443   Registry: 50000
+默认账号: admin/Harbor12345

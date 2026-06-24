@@ -1,2 +1,42 @@
-file_put_contents   
-file_get_contents
+# 文件操作常见危险函数
+
+## 文件读取
+```
+file_get_contents()    readfile()      fread()
+fgets()               fgetss()        file()
+parse_ini_file()      highlight_file() show_source()
+```
+
+## 文件写入
+```
+file_put_contents()   fwrite()         fputs()
+fputs()               ftruncate()
+```
+
+## 文件删除
+```
+unlink()              delete()
+```
+
+## 文件执行/包含
+```
+include()             include_once()   require()
+require_once()        eval()           assert()
+```
+
+## 目录操作
+```
+mkdir()    rmdir()    chdir()   chroot()
+```
+
+## 文件属性
+```
+chmod()    chown()    chgrp()
+```
+
+## 审计搜索关键词
+```
+$_GET['file']  $_POST['file']  $_GET['path']  $_POST['path']
+$_GET['dir']   $_POST['dir']   $_GET['action']
+unlink($_      file_put_contents($_    fopen($_   fwrite($_
+```

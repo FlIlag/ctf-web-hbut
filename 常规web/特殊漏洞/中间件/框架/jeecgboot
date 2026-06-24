@@ -1,0 +1,5 @@
+JeecgBoot 低代码平台
+漏洞: SQL注入、未授权访问、任意文件上传
+默认路径: /jeecg-boot/
+测试: /online/cgform, /sys/dict
+Query 接口未授权泄露

@@ -1,0 +1,4 @@
+Rsync 同步服务 (873)
+漏洞：未授权访问、敏感文件下载
+测试: rsync target::
+rsync -av target::share /tmp/

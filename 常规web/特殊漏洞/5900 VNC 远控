@@ -1,0 +1,5 @@
+VNC 远程控制 (5900)
+默认无密码或弱密码
+漏洞：认证绕过(CVE-2006-2369)
+测试: vncviewer target
+nmap --script vnc-brute -p 5900 target

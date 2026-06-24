@@ -1,1 +1,5 @@
-jwt空密匙导致的未授权
+# InfluxDB (8086/8088)
+8086: HTTP API, 8088: 集群通信
+漏洞: JWT空密钥未授权(CVE-2019-20933)
+测试: curl http://target:8086/ping
+curl http://target:8086/query?q=show+databases

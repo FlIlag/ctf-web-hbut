@@ -1,3 +1,30 @@
-1.最基本的，xff改为127.0.0.1
-2.进阶的，改127.0.0.1后，如果不成功，尝试改返回包，删除返回包中的跳转js，例如href标签.
+# IP 限制绕过
 
+## XFF 伪造
+```http
+X-Forwarded-For: 127.0.0.1
+X-Real-IP: 127.0.0.1
+X-Forwarded-For: 127.0.0.1, 192.168.1.1
+Client-IP: 127.0.0.1
+X-Client-IP: 127.0.0.1
+X-Remote-IP: 127.0.0.1
+X-Originating-IP: 127.0.0.1
+```
+
+## 返回包干扰
+改 127.0.0.1 后不成功，尝试改返回包
+删除返回包中的跳转 JS（如 href 标签），让页面继续显示
+
+## 多层代理
+```http
+X-Forwarded-For: 内网IP, 127.0.0.1
+# 后端可能取第一个或最后一个，需测试
+```
+
+## 绕过 CDN/WAF
+```bash
+# 通过真实 IP 访问
+curl http://真实IP
+# 修改 Host 头
+curl -H "Host: target.com" http://真实IP
+```

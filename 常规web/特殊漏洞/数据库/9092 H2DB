@@ -1,1 +1,6 @@
-未授权
+# H2 Database (9092)
+Java SQL 数据库
+漏洞: 未授权访问RCE(CVE-2021-42392)
+Spring Boot H2 console: /h2-console
+JDBC URL: jdbc:h2:mem:testdb
+可直接执行 SQL 命令

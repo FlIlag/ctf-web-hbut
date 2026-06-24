@@ -1,1 +1,5 @@
-https://www.freebuf.com/articles/web/286666.html
+Spring 框架
+漏洞: SpEL注入(CVE-2022-22965), Actuator泄露
+Spring4Shell: class.module.classLoader.xxx
+测试: /actuator, /actuator/env, /actuator/health
+利用工具: spring4shell-scan

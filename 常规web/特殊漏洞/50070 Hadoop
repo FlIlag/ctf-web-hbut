@@ -1,0 +1,4 @@
+Hadoop Web UI (50070)
+漏洞：未授权访问、信息泄露
+测试: curl http://target:50070/dfshealth.html
+curl http://target:50070/conf

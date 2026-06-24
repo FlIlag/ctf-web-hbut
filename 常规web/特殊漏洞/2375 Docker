@@ -1,1 +1,5 @@
-
+Docker 远程 API (2375)
+漏洞：未授权访问、容器逃逸
+测试: curl http://target:2375/version
+curl http://target:2375/containers/json
+docker -H tcp://target:2375 ps

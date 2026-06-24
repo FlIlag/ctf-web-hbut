@@ -1,1 +1,5 @@
-
+NFS 网络文件系统 (2049)
+漏洞：未授权访问、敏感文件泄露
+测试: showmount -e target
+mount -t nfs target:/export /mnt
+rpcinfo -p target

@@ -1,0 +1,5 @@
+SQL Server 数据库 (1433)
+默认账号: sa
+漏洞：弱密码、xp_cmdshell提权、注入
+测试: sqsh -S target -U sa
+nmap --script ms-sql-brute -p 1433 target

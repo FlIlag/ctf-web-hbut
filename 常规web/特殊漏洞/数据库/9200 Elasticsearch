@@ -1,3 +1,5 @@
-道一漏洞库中有
-
-未授权，rce，目录遍历
+# Elasticsearch (9200)
+未授权访问、RCE(CVE-2014-3120)、目录遍历
+测试: curl http://target:9200/
+curl http://target:9200/_cat/indices
+curl http://target:9200/_nodes

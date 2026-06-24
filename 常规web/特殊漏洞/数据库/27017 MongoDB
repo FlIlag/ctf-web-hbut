@@ -1,3 +1,6 @@
+# MongoDB (27017)
+默认无密码，存在未授权访问
+测试: mongo --host target
+nmap --script mongodb-info -p 27017 target
+漏洞: 未授权访问、信息泄露
 https://www.freebuf.com/vuls/277847.html
-
-信息泄露，未授权访问

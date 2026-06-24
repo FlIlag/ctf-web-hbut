@@ -1,1 +1,30 @@
-1.对于用户验证只做了cookie的非空效验
+# 校验逻辑翻车场景
+
+## Cookie 非空即通过
+```php
+if ($_COOKIE['user']) {
+    // 直接认为是合法用户，未解密验证签名
+}
+```
+绕过：随意设置 Cookie 值
+
+## 只校验前端
+```php
+if ($is_admin) { show_admin_page(); }
+```
+`$is_admin` 来自前端提交的参数
+
+## 只检查文件是否存在
+```php
+if (file_exists($file)) { include($file); }
+```
+绕过：文件包含任意文件
+
+## 登录后不重置 Session
+登录前后使用同一 Session，导致 Session 固定攻击
+
+## isset 判断漏洞
+```php
+if (isset($_SESSION['user'])) { ... }
+// session 存在即通过，但可能为 false/null
+```

@@ -1,2 +1,4 @@
-任意文件读写
-https://zhuanlan.zhihu.com/p/924893213
+Nacos Jraft 通信端口 (7848)
+漏洞：Nacos 反序列化、未授权
+Nacos 主端口: 8848
+测试接口: /nacos/v1/ns/operator/servers

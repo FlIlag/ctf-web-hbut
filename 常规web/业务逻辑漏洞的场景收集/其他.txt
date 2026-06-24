@@ -1,3 +1,24 @@
-1.使用nginx等反向代理tomcat导致规则冲突 导致 /..;/ 可以造成路径遍历。eg:https://rdfzftxx.cn/docs/..;/
+# 其他业务逻辑漏洞
 
-2.pdfxss可以直接上传后不用提交直接点击访问，因为有的网站提交前就已经储存了。
+## Nginx + Tomcat 路径遍历
+```
+nginx 反向代理 tomcat 规则冲突
+/..;/ 可导致路径遍历
+https://target.com/docs/..;/WEB-INF/web.xml
+```
+
+## PDF XSS
+上传 PDF 后直接访问无需提交
+因为有的网站上传即储存，直接访问 PDF URL 触发 XSS
+
+## 水平越权
+修改用户 ID 参数可操作其他用户数据
+
+## 条件竞争
+同时发送多个请求，抢多次优惠/签到
+
+## 数据篡改
+修改返回包中的金额/数量/状态
+```
+{"status":"fail","amount":100} → {"status":"success","amount":1}
+```

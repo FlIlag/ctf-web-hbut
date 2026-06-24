@@ -1,1 +1,5 @@
-rce
+Jenkins CI/CD (8080)
+默认账号: admin/admin
+漏洞: RCE(CVE-2024-23897), 反序列化
+RCE: /script 控制台执行 Groovy
+测试: curl http://target:8080/script

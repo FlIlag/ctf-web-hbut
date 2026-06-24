@@ -1,1 +1,4 @@
-
+SMB (445)
+EternalBlue(MS17-010), SMBGhost(CVE-2020-0796)
+smbclient -L //target/ -N
+enum4linux -a target

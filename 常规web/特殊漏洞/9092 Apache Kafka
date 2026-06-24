@@ -1,1 +1,4 @@
-
+Apache Kafka 消息队列 (9092)
+漏洞：未授权访问、信息泄露
+测试: nc -zv target 9092
+利用工具: kafkacat

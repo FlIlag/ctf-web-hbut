@@ -1,2 +1,4 @@
-未授权，rce，
-https://www.freebuf.com/vuls/293254.html
+CouchDB (5984)
+未授权访问CVE-2017-12635/12636
+测试: curl http://target:5984/_all_dbs
+curl -X PUT http://target:5984/test

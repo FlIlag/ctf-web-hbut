@@ -1,0 +1,41 @@
+# SQL 注入流量特征
+
+## 检测特征
+```http
+# 错误回显
+You have an error in your SQL syntax
+Warning: mysql_fetch_array()
+
+# 闭合测试
+'  "  )  ')  ")  '))  "))
+
+# 时间盲注
+AND SLEEP(5)
+AND 1=IF(2>1,SLEEP(5),0)
+AND BENCHMARK(5000000,MD5('test'))
+```
+
+## 工具流量特征
+```bash
+# sqlmap
+sqlmap  # User-Agent 默认含 sqlmap（除非 --random-agent）
+sqlmap  # 请求顺序：错误注入 → 布尔盲注 → 时间盲注 → UNION
+sqlmap  # 大量异常 HTTP Header（如特定的 Cache-Control）
+
+# 手工注入特征
+# UNION SELECT 后跟数字
+# 1' AND 1=1 → 1' AND 1=2 对比
+# ORDER BY 测列数
+```
+
+## WAF 绕过流量
+```bash
+# 注释混淆
+/**/union/**/select
+
+# 编码混淆
+%55%4e%49%4f%4e (URL编码union)
+
+# HTTP 参数污染
+?id=1&id=2&id=3+union+select...
+```

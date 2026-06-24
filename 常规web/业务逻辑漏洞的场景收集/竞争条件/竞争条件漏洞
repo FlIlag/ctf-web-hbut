@@ -1,0 +1,30 @@
+# 竞争条件漏洞
+
+## 常见场景
+```
+抢购: 检查库存→扣减库存 之间的时间差导致超卖
+优惠券: 并发请求使用同一张优惠券
+提现: 余额检查→扣减余额 之间的并发提现
+签到: 同一账号并发签到获得多次积分
+文件上传: 检测→改名 中间替换文件内容
+```
+
+## 检测
+Burp Intruder 并发 20-50 线程同时发送请求
+
+## 修复
+```sql
+-- 行锁
+BEGIN; SELECT stock FROM products WHERE id=1 FOR UPDATE; UPDATE products SET stock=stock-1 WHERE id=1; COMMIT;
+
+-- 原子操作
+UPDATE products SET stock=stock-1 WHERE id=1 AND stock>0;
+```
+
+```php
+// Redis 分布式锁
+$lock = Redis::setnx('lock:key', 1);
+Redis::expire('lock:key', 10);
+
+// 队列串行化
+```

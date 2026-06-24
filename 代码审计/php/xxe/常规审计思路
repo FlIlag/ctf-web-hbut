@@ -1,6 +1,4 @@
-# XXE 常规审计思路
-
-> XML External Entity — XML 外部实体注入
+# XXE 审计思路
 
 ## 危险函数（PHP）
 

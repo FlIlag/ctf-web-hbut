@@ -1,0 +1,57 @@
+# Web 通用漏洞速查
+
+## 管理后台
+```bash
+/admin
+/manager
+/login
+/admin/login
+/system
+/console
+/backend
+```
+
+## 敏感文件
+```bash
+/robots.txt
+/sitemap.xml
+/.git/config
+/.svn/entries
+/Dockerfile
+/docker-compose.yml
+/.env
+/config.php.bak
+/config.php~  (.swp)
+/index.php.bak
+/www.zip
+/backup.sql
+```
+
+## 框架默认路径
+```bash
+# ThinkPHP
+/index.php?s=index/\think\app/invokefunction
+
+# Spring Boot
+/actuator
+/actuator/health
+/actuator/env
+/swagger-ui.html
+/v2/api-docs
+
+# Laravel
+/_ignition/health-check
+/_ignition/execute-solution
+```
+
+## 信息泄露
+```bash
+/phpinfo.php
+/info.php
+/test.php
+/server-status
+/server-info
+/.DS_Store
+/crossdomain.xml
+/clientaccesspolicy.xml
+```

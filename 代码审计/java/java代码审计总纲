@@ -1,0 +1,90 @@
+# Java 代码审计总纲
+
+## 常见漏洞与审计重点
+
+### 1. SQL 注入
+```java
+// 危险写法：拼接 SQL
+String sql = "SELECT * FROM user WHERE id=" + request.getParameter("id");
+Statement stmt = conn.createStatement();
+ResultSet rs = stmt.executeQuery(sql);
+
+// 安全写法：PreparedStatement
+PreparedStatement ps = conn.prepareStatement("SELECT * FROM user WHERE id=?");
+ps.setString(1, request.getParameter("id"));
+ResultSet rs = ps.executeQuery();
+
+// MyBatis 注意 ${} 和 #{} 的区别
+// ${param} → 直接拼接（危险）
+// #{param} → 预编译（安全）
+```
+
+### 2. 命令执行
+```java
+// 危险
+Runtime.getRuntime().exec("ping " + request.getParameter("ip"));
+Runtime.getRuntime().exec(request.getParameter("cmd"));
+
+// ProcessBuilder
+new ProcessBuilder("ping", request.getParameter("ip")).start(); // 参数化较安全
+new ProcessBuilder("cmd /c " + request.getParameter("cmd")).start(); // 危险
+```
+
+### 3. 文件上传
+```java
+// 关键类
+MultipartFile
+FileUpload
+CommonsMultipartResolver
+
+// 审计点
+- 后缀名是否白名单校验
+- 文件内容是否校验（图片头检测）
+- 上传路径是否可控
+- 是否使用了随机文件名
+```
+
+### 4. 反序列化
+```java
+// 危险函数
+ObjectInputStream.readObject()
+ObjectInputStream.readUnshared()
+
+// 审计搜索
+- new ObjectInputStream(request.getInputStream())
+- Java API 反序列化入口
+- Hessian 反序列化
+- JSON 反序列化（Fastjson/jackson）
+```
+
+### 5. SSRF
+```java
+// 关键类
+URL url = new URL(request.getParameter("url"));
+URLConnection conn = url.openConnection();
+HttpURLConnection.setFollowRedirects(true);
+
+// OkHttp / HttpClient
+OkHttpClient client = new OkHttpClient();
+Request req = new Request.Builder().url(request.getParameter("url")).build();
+```
+
+### 6. 任意文件读取/下载
+```java
+// 审计点
+File file = new File(request.getParameter("path"));
+FileInputStream fis = new FileInputStream(file);
+
+// 关键搜索
+- download?path=
+- file?name=
+- readFile?filePath=
+```
+
+## 常用审计工具
+```bash
+# FindSecBugs — IDEA 插件
+# CodeQL — 代码分析
+# Fortify / Checkmarx — 商业工具
+# 手动搜索关键字
+```

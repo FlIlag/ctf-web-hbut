@@ -1,85 +1,40 @@
-# 哥斯拉（Godzilla）流量分析
+# 哥斯拉流量特征
 
-## 整体架构
+## 加密
+PHP: XOR + Base64
+JSP: AES + Base64（密钥动态维护）
+ASPX: AES/XOR/Base64（Session 维护密钥）
 
-哥斯拉使用 Java 实现，支持 JSP、ASPX、PHP 等多种脚本语言，Payload 经过多层加密。
-
-## 加密机制
-
-### PHP 环境
-- Payload 使用 PHP 的 `XOR` + `Base64` 编码
-- 密钥通过参数传递，每次请求不同
-
-### JSP 环境
-- 使用 AES 加密 + Base64 编码
-- 密钥协商方式与冰蝎类似，但具体实现不同
-
-### ASPX 环境
-- 支持 AES、XOR、Base64 组合
-- 密钥在 Session 中动态维护
-
-## 流量特征
-
-### 1. 请求头特征
+## 请求特征
 ```
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Accept-Language: zh-CN,zh;q=0.9
-Cache-Control: no-cache
-Pragma: no-cache
+Cache-Control: no-cache; Pragma: no-cache
 ```
 
-### 2. 请求体特征
-```
-POST 请求
-Content-Type: application/x-www-form-urlencoded
-参数多为乱码或 Base64 编码字符串
-```
-
-### 3. 关键 HTTP 头特征
-哥斯拉会发送特定的 HTTP 头字段：
-```
-Cookie: JSESSIONID=...  (JSP环境)
-注意：Cookie 值的模式与正常访问不同
-```
-
-### 4. 请求参数特征
+## 参数
 ```
 pass=xxx&param=base64编码内容
+pass=木马密码，param=加密payload
 ```
-`pass` 参数值为一句话木马密码，`param` 为加密后的 Payload。
+JSP 环境 Cookie 可能有 JSESSIONID
 
-### 5. 响应体特征
-- 返回内容长度通常较大
-- 内容为加密数据，信息熵高
-- 响应中可能包含 `0x00` `0xff` 等非打印字符（序列化标记）
+## 响应
+内容长，信息熵高，可能含 `\x00` `\xff` 等非打印字符
 
-## 哥斯拉 vs 冰蝎 流量对比
-
+## 冰蝎 vs 哥斯拉
 | 特征 | 冰蝎 | 哥斯拉 |
 |------|------|--------|
-| 密钥交换 | 独立请求 | 嵌入在参数中 |
-| 加密方式 | AES为主 | XOR+AES+Base64 |
+| 密钥交换 | 单独请求 | 嵌入参数 |
+| 加密 | AES为主 | XOR+AES+Base64 |
 | 请求频率 | 高频短连接 | 低频长连接 |
-| 协议支持 | HTTP/HTTPS | HTTP/HTTPS |
-| 自定义程度 | 高 | 较高 |
 
-## 检测哥斯拉
+## 检测
+- 参数名固定（可自定义但结构模式固定）
+- 请求长度固定（AES 块对齐）
+- 信息熵 > 6.5
+- 初始化操作为 getBasicsInfo/getDrivers 等固定顺序
 
-1. **请求包参数名固定** — 哥斯拉的 `pass` 参数名可自定义，但参数结构模式固定
-2. **请求包长度固定** — 同一操作每次请求的加密后长度相同（AES 块对齐）
-3. **请求体熵值较高** — 加密数据的信息熵 > 6.5
-4. **时序分析** — 哥斯拉通常先执行 `getBasicsInfo`、`getDrivers` 等初始化操作
-5. **Referer 检查** — 很多哥斯拉请求 Referer 为空或异常
-
-## 哥斯拉的混淆与魔改
-
-- 密码参数名可任意修改
-- 加密算法可替换
-- 请求体格式可自定义
-- User-Agent 可修改
-- 代理可支持自定义 Header
-
-## 参考链接
-- https://zhiaild.cn/index.php/archives/137/
-- https://www.freebuf.com/sectool/285693.html
-- https://cn-sec.com/archives/4283585.html
+## 参考
+https://zhiaild.cn/index.php/archives/137/
+https://www.freebuf.com/sectool/285693.html

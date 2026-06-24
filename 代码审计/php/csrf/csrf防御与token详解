@@ -1,0 +1,39 @@
+# CSRF 防御与 Token 机制详解
+
+## Token 校验机制
+```
+checktoken函数 → 存在时说明有 token 效验
+无法单独触发 csrf，需要 xss 窃取用户 token
+```
+
+## SameSite Cookie 机制
+```
+Strict: 完全禁止第三方站点请求携带 Cookie
+Lax（默认）: GET 请求可携带，POST 禁止
+None: 不限制（需 Secure 属性）
+
+绕过思路：
+  - SameSite=Lax 时，尝试 GET 方法触发
+  - 利用子域名（如 xss.target.com）
+  - 利用浏览器插件/扩展
+```
+
+## Referer 校验绕过
+```
+严格同源校验：
+  if( stripos( $_SERVER['HTTP_REFERER'], $_SERVER['SERVER_NAME']) !== false )
+
+绕过方法：
+  - 空 Referer（file:// 协议、data: URI）
+  - 去掉 Referer（<meta name="referrer" content="never">）
+  - Referer 策略利用
+```
+
+## 防御方案
+```
+1. 使用 CSRF Token（随机且一次性）
+2. SameSite Cookie（Lax/Strict）
+3. 二次验证（输入密码/验证码）
+4. 关键操作校验 Origin/Referer
+5. 自定义请求头（X-Requested-With: XMLHttpRequest）
+```

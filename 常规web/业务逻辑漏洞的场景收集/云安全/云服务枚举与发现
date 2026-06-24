@@ -1,0 +1,71 @@
+# 云服务枚举与发现
+
+## 子域名接管
+```bash
+# CNAME 指向云服务但已删除原资源
+# 常见可接管场景：
+bucket.s3.amazonaws.com        # S3 桶被删除
+target.cloudfront.net           # CloudFront 被删除
+target.trafficmanager.net       # Azure Traffic Manager
+target.cname.aliyuncs.com       # 阿里云 OSS/CNAME
+```
+
+## 云服务指纹识别
+```bash
+# IP/域名反查云服务商
+whois IP | grep -i "amazon\|alibaba\|microsoft"
+
+# HTTP 响应头指纹
+x-oss-request-id        # 阿里云 OSS
+x-amz-request-id        # AWS
+via: 11 cdn.xxx.com     # CDN
+```
+
+## 云存储桶枚举
+```bash
+# 常见命名模式
+{company}-backup
+{company}-static
+{company}-assets
+{company}-files
+{company}-dev
+{company}-prod
+{company}-images
+{company}-uploads
+{company}-config
+{company}-data
+
+# 工具
+s3scanner -o bucket.txt  # S3
+aliyun-oss-bucket-scanner
+cloud_enum -k company-name
+```
+
+## 云 API/端口
+```bash
+# Docker
+2375/2376: Docker API
+# Kubernetes
+6443: K8s API
+10250: Kubelet API
+# 云数据库（云厂商托管）
+# 需结合 AK/SK 或特定网络访问
+```
+
+## Serverless
+```bash
+# AWS Lambda
+# 函数 URL: https://xxx.lambda-url.region.on.aws/
+# 注入：通过 event 参数注入
+# 环境变量泄露
+```
+
+## 行动思路
+```
+1. 收集目标域名列表
+2. DNS 解析 → 识别云服务商
+3. 子域名接管检测
+4. 扫描公开存储桶
+5. 以 AK/SK 为突破口横向移动
+6. 利用云 API 枚举资源
+```

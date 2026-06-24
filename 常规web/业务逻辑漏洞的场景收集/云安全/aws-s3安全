@@ -1,0 +1,64 @@
+# AWS S3 安全
+
+## S3 存储桶枚举
+```bash
+# 工具扫描公开桶
+s3scanner bucket-names.txt
+cloud_enum -k target-keyword
+
+# curl 直接测试
+curl -I https://bucket-name.s3.amazonaws.com/
+curl -I https://bucket-name.s3.us-east-1.amazonaws.com/
+```
+
+## 未授权访问测试
+```bash
+# 列举（需 ListBucket 权限）
+aws s3 ls s3://bucket-name --no-sign-request
+
+# 读取文件
+aws s3 cp s3://bucket-name/flag.txt . --no-sign-request
+
+# 写文件（需 PutObject 权限）
+aws s3 cp local.txt s3://bucket-name/ --no-sign-request
+```
+
+## S3 ACL 配置错误
+```bash
+# 查看桶 ACL
+aws s3api get-bucket-acl --bucket bucket-name
+
+# 查看桶策略
+aws s3api get-bucket-policy --bucket bucket-name
+```
+
+## S3 预签名 URL
+```bash
+# 生成预签名 URL（GET，7天有效）
+aws s3 presign s3://bucket-name/flag.txt --expires-in 604800
+
+# 分析预签名 URL 中的参数
+# AWSAccessKeyId / Signature / Expires
+```
+
+## S3 混淆域名
+```bash
+# S3 存储桶支持自定义域名，CNAME 指向 s3.amazonaws.com
+# 如 bucket 名为 target.com，则访问 target.com.s3.amazonaws.com
+# 子域名接管：bucket 被删除后 CNAME 记录未清理
+# AWS S3 子域名接管
+```
+
+## IAM 凭据泄露
+```bash
+# ~/.aws/credentials 泄露
+# 环境变量泄露
+# 代码中硬编码
+```
+
+## S3 事件通知
+```bash
+# S3 可配置事件通知到 SQS/Lambda
+# 上传文件触发 Lambda 执行
+# 检测：查看桶的事件通知配置
+```

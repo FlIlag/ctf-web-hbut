@@ -1,3 +1,74 @@
-https://cn-sec.com/archives/3442690.html
+# 冰蝎（Behinder）流量加密与特征
 
-https://cn-sec.com/archives/4283585.html
+## 默认加密机制
+
+冰蝎使用 AES 加密 + Base64 编码进行通信，密钥动态生成。
+
+### 加密流程
+1. 客户端发送密钥协商请求（GET）
+2. 服务端返回 AES 密钥（经过 RSA 加密）
+3. 后续所有请求使用 AES 加密 payload
+4. 响应同样使用 AES 加密返回
+
+## 流量特征
+
+### 1. Accept 头特征
+冰蝎默认 Accept 头为：
+```
+Accept: application/json, text/javascript, */*; q=0.01
+```
+但大部分版本的冰蝎已经支持自定义，不能仅凭此判断。
+
+### 2. Content-Type
+```
+Content-Type: application/x-www-form-urlencoded
+```
+
+### 3. User-Agent 特征
+冰蝎 2.x 默认 User-Agent 与 Java 版本相关，如：
+```
+Java/1.8.0_201
+```
+冰蝎 3.x/4.x 开始支持自定义，但仍有部分版本未修改时特征明显。
+
+### 4. 连接建立特征
+冰蝎连接过程中的三个阶段：
+1. **密钥建立** — GET 请求，Response 中有 `k=` 参数
+2. **测试连接** — POST 请求，返回固定格式
+3. **执行命令** — POST 请求，AES 加密传输
+
+### 5. 请求体特征
+冰蝎请求体通常为：
+```
+键值对形式，值是一长串 Base64 编码字符
+```
+解密后为序列化的 Java 对象（Java 环境）或序列化的 PHP 对象。
+
+### 6. 响应体特征
+冰蝎响应体特征：
+- Content-Length 通常固定或规律变化
+- 响应体为 Base64 编码的密文
+- 密文解密后为序列化数据
+
+### 7. 冰蝎4.x 新增特征
+- 支持多种协议：HTTP、HTTPS、WebSocket
+- 加密方式可选：AES、XOR、ROT
+- 请求体可能包含自定义 UserData 字段
+
+## 魔改冰蝎的检测难点
+
+- Accept、User-Agent 均可自定义
+- 密钥传输方式可修改为固定密钥
+- 加密算法可替换
+- 请求/响应格式可自定义序列化方式
+
+## 检测思路
+
+1. **密钥交互阶段** — 冰蝎建立连接时一定有密钥协商（除非使用固定密钥）
+2. **请求长度特征** — 正常业务请求长度变化大，冰蝎请求长度较为固定
+3. **熵值检测** — 加密 payload 的信息熵较高（接近 6.0-7.0）
+4. **会话行为分析** — 冰蝎有固定的连接时序：密钥协商 → 测试连接 → 执行命令
+
+## 参考链接
+- https://cn-sec.com/archives/3442690.html
+- https://cn-sec.com/archives/4283585.html

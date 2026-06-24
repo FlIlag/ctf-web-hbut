@@ -1,5 +1,110 @@
-for seg in 172.16.10. 172.25.20. 172.26.30.; do for host in {1..254}; do ip=$seg$host; ping -c1 -W1 $ip >/dev/null 2>&1 && echo "[可达] $ip" || :; done; echo "--- 网段 $seg0/24 扫描结束 ---"; done
-ip部分自行更改；
+# 内网存活主机扫描
 
-for ip in 172.16.10.1; do for port in {1..1000}; do (nc -zv -w1 $ip $port 2>&1 | grep -q "succeeded" && echo "[$ip] 开放端口: $port") & done; wait; done
-扫端口；
+## 1. ICMP Ping 扫描
+
+```bash
+# 基础批量 Ping
+for seg in 172.16.10. 172.25.20. 172.26.30.; do
+  for host in {1..254}; do
+    ip=$seg$host
+    ping -c1 -W1 $ip >/dev/null 2>&1 && echo "[可达] $ip" || :
+  done
+done
+```
+
+## 2. Nmap 扫描
+
+```bash
+# Ping 扫描网段
+nmap -sn 172.16.10.0/24
+
+# 快速端口扫描
+nmap -sT --min-rate 10000 -p- 172.16.10.21 -oA nmapscan/ports
+
+# 版本和服务探测
+nmap -sT -sV -sC -O -p<端口号> 172.16.10.21 -oA nmapscan/detail
+
+# UDP 扫描
+nmap -sU --top-ports 20 172.16.10.21 -oA nmapscan/udp
+
+# 漏洞脚本扫描
+nmap --script=vuln -p<端口号> 172.16.10.21 -oA nmapscan/vuln
+
+# SMB 枚举脚本
+nmap --script=smb-enum-shares,smb-enum-users -p 445 172.16.10.0/24
+
+# 快速扫描B段
+nmap -sn 172.16.0.0/16
+```
+
+## 3. arp-scan（本地网络）
+
+```bash
+# ARP 扫描（速度快，不易被防火墙拦截）
+arp-scan --localnet
+arp-scan 172.16.10.0/24
+```
+
+## 4. Netdiscover
+
+```bash
+# 被动模式（监听ARP包）
+netdiscover -p
+
+# 主动扫描
+netdiscover -r 172.16.10.0/24 -i eth0
+```
+
+## 5. Masscan 高速扫描
+
+```bash
+# 全端口扫描（速度极快）
+masscan -p1-65535 --rate=1000 172.16.10.0/24
+
+# 指定端口扫描
+masscan -p80,443,22,3389,445,3306,6379 --rate=10000 172.16.10.0/24
+```
+
+## 6. 端口批量探测（nc）
+
+```bash
+# 使用 nc 批量检查端口
+for ip in 172.16.10.1; do
+  for port in {1..1000}; do
+    (nc -zv -w1 $ip $port 2>&1 | grep -q "succeeded" && echo "[$ip] 开放端口: $port") &
+  done
+  wait
+done
+```
+
+## 7. Windows 下的存活扫描（通过代理）
+
+```bash
+# 通过 Socks 代理扫描
+proxychains nmap -sn 10.10.10.0/24
+
+# 通过 frp/nps 代理后扫描
+nmap -sT -Pn -p 22,80,445,3389 -oG scan.gnmap 10.10.10.0/24
+```
+
+## 8. Web 服务发现（HTTP）
+
+```bash
+# 批量探测 HTTP 服务
+for i in {1..254}; do
+  curl -s -m 2 http://192.168.1.$i 2>/dev/null && echo "Web: 192.168.1.$i"
+done
+
+# 使用 httpx（推荐）
+httpx -l ip_list.txt -threads 50 -title -status-code
+```
+
+## 扫描策略总结
+
+| 场景 | 推荐工具 | 特点 |
+|------|---------|------|
+| 大网段快速探测 | masscan | 极快，但可能被 IDS 发现 |
+| 精细扫描 | nmap | 功能全面，最常用 |
+| 本地网络 | arp-scan | 速度快，较隐蔽 |
+| 通过代理扫描 | proxychains + nmap | 支持协议多 |
+| 内网 Web 发现 | httpx | 支持批量标题/状态码 |

